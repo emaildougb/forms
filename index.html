@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C3A1C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Forms">
+<meta name="robots" content="noindex, nofollow">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>NCEMS Forms</title>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.30.0/lib/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root { --g-deep:#1C3A1C; --g:#2E6B2E; --g-light:#e8f1e8; --line:#c9d8c9; --bg:#f1f4f1; --ink:#1b261b; --muted:#5f6f5f; --bad:#b91c1c; --warn:#b7791f; --info:#1F5C8B; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:'SF Mono', ui-monospace, 'Cascadia Code', Menlo, monospace; font-size:14px; }
+  button, input, textarea, select { font-family:inherit; font-size:inherit; color:inherit; }
+  header { position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:10px; padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top)); background:linear-gradient(135deg,#1C3A1C,#2E6B2E); color:#fff; }
+  header img { width:40px; height:40px; border-radius:50%; background:#fff; }
+  header .t { flex:1; min-width:0; }
+  header h1 { margin:0; font-size:15px; letter-spacing:1.5px; text-transform:uppercase; }
+  header p { margin:2px 0 0; font-size:10.5px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .icon-btn { width:40px; height:40px; border-radius:50%; border:1.5px solid rgba(255,255,255,.45); background:rgba(255,255,255,.12); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .icon-btn svg { width:20px; height:20px; }
+  main { max-width:860px; margin:0 auto; padding:14px 14px calc(40px + env(safe-area-inset-bottom)); }
+  .hello { margin:4px 2px 12px; } .hello h2 { margin:0; font-size:18px; } .hello span { font-size:11px; color:var(--muted); }
+  .lbl { font-size:10.5px; letter-spacing:1.5px; color:var(--muted); font-weight:800; margin:18px 2px 8px; text-transform:uppercase; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
+  .tile { display:flex; gap:12px; align-items:center; background:#fff; border:none; border-left:6px solid var(--c); border-radius:14px; padding:13px 14px; text-align:left; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.08); width:100%; }
+  .tile:hover { box-shadow:0 3px 12px rgba(0,0,0,.14); }
+  .tile i { font-style:normal; font-size:22px; width:28px; text-align:center; }
+  .tile b { display:block; font-size:14px; color:var(--g-deep); }
+  .tile em { font-style:normal; font-size:11px; color:var(--muted); }
+  .search-big { display:flex; gap:8px; }
+  .inp, textarea.inp, select.inp { width:100%; background:#fff; border:1.5px solid var(--line); border-radius:9px; padding:10px 11px; outline:none; }
+  .inp:focus { border-color:var(--g); }
+  textarea.inp { min-height:84px; resize:vertical; line-height:1.45; }
+  textarea.inp.short { min-height:56px; }
+  .btn { border:none; border-radius:10px; padding:11px 16px; background:var(--g); color:#fff; font-weight:800; letter-spacing:.6px; cursor:pointer; white-space:nowrap; }
+  .btn.ghost { background:#fff; color:var(--g); border:1.5px solid var(--g); }
+  .btn.small { padding:7px 11px; font-size:12px; }
+  .btn.red { background:var(--bad); }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .card { background:#fff; border-radius:14px; padding:14px; box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:12px; }
+  .card h3 { margin:0 0 10px; font-size:13px; letter-spacing:1.2px; text-transform:uppercase; color:var(--g-deep); }
+  .f { margin-bottom:12px; } .f > label { display:block; font-size:10.5px; font-weight:800; letter-spacing:1px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; }
+  .f .hint { font-size:11px; color:var(--muted); margin-top:4px; line-height:1.4; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .item { display:flex; gap:6px; align-items:flex-start; margin-bottom:6px; }
+  .item .inp { flex:1; }
+  .x { border:none; background:#f3e0e0; color:var(--bad); border-radius:8px; width:34px; height:38px; cursor:pointer; flex-shrink:0; font-weight:800; }
+  .add { border:none; background:none; color:var(--g); font-weight:800; cursor:pointer; padding:4px 0; font-size:12.5px; }
+  .grp { border:1.5px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px; background:#fbfdfb; }
+  .grp .grp-h { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:11px; font-weight:800; color:var(--muted); }
+  .f > label.ck { text-transform:none; font-size:inherit; letter-spacing:0; font-weight:400; color:inherit; margin:0; }
+  .ck { display:flex; gap:9px; align-items:flex-start; padding:7px 4px; cursor:pointer; border-radius:8px; }
+  .ck:hover { background:var(--g-light); }
+  .ck input { width:18px; height:18px; margin:1px 0 0; accent-color:var(--g); flex-shrink:0; }
+  .ck b { display:block; font-size:12.5px; } .ck em { display:block; font-style:normal; font-size:11px; color:var(--muted); line-height:1.4; margin-top:2px; }
+  .seg { display:flex; gap:6px; flex-wrap:wrap; } .seg button { border:1.5px solid var(--line); background:#fff; border-radius:9px; padding:8px 12px; cursor:pointer; font-weight:700; font-size:12.5px; }
+  .seg button.on { background:var(--g); color:#fff; border-color:var(--g); }
+  .auto { background:var(--g-light); border-radius:9px; padding:9px 11px; font-size:12px; line-height:1.5; color:#234423; }
+  .pill { display:inline-block; border-radius:20px; padding:2px 9px; font-size:10.5px; font-weight:800; }
+  .conf { background:#fdecec; color:#a11d1d; }
+  .find { border:1.5px dashed #9fb59f; border-radius:12px; padding:10px; background:#f8fbf8; }
+  .find-row { display:flex; gap:6px; }
+  .res { margin-top:8px; }
+  .res .r { background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:9px 10px; margin-bottom:6px; }
+  .res .r b { font-size:12.5px; color:var(--g-deep); } .res .r p { margin:4px 0 6px; font-size:11.5px; color:#3b4a3b; line-height:1.45; }
+  .res .r mark { background:#fff1a8; }
+  .ai-btn { border:1.5px solid #8a6ad8; background:#f4f0fd; color:#5b3fb5; border-radius:10px; padding:9px 12px; font-weight:800; cursor:pointer; white-space:nowrap; }
+  .ai-note { font-size:10px; color:#7a68a8; margin-top:3px; text-align:right; }
+  .steps { display:flex; gap:4px; margin:4px 0 12px; } .steps i { flex:1; height:5px; border-radius:3px; background:var(--line); } .steps i.on { background:var(--g); }
+  .bar { position:sticky; bottom:0; display:flex; gap:8px; padding:10px 0 calc(10px + env(safe-area-inset-bottom)); background:linear-gradient(transparent, var(--bg) 30%); }
+  .bar .btn { flex:1; }
+  .check-list { margin:0; padding:0; list-style:none; } .check-list li { padding:8px 10px; border-radius:9px; margin-bottom:6px; font-size:12.5px; line-height:1.4; display:flex; gap:8px; }
+  .check-list li.ok { background:#e6f3e6; color:#1f5a1f; } .check-list li.warn { background:#fdf3dc; color:#7a5410; } .check-list li.bad { background:#fde3e3; color:#8c1c1c; }
+  .preview { background:#fff; border:1px solid #ddd; border-radius:6px; padding:22px 26px; font-family:Calibri, 'Segoe UI', Arial, sans-serif; font-size:13px; line-height:1.45; max-height:460px; overflow:auto; }
+  .preview h4 { margin:12px 0 4px; font-size:14px; } .preview ul { margin:4px 0; padding-left:20px; } .preview table { border-collapse:collapse; width:100%; margin:6px 0; font-size:12px; } .preview td, .preview th { border:1px solid #bbb; padding:4px 6px; text-align:left; vertical-align:top; } .preview th { background:#eee; }
+  .preview .memo { font-size:15px; } .preview .memo div { margin:3px 0; } .preview .memo b.k { display:inline-block; width:95px; font-weight:400; }
+  .person-hd { display:flex; align-items:center; gap:12px; } .avatar { width:46px; height:46px; border-radius:50%; background:var(--g); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0; }
+  .doc { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1.5px solid var(--line); border-radius:11px; background:#fff; margin-bottom:7px; }
+  .doc .dt { font-size:11px; color:var(--muted); min-width:74px; padding-top:2px; }
+  .doc .bd { flex:1; min-width:0; } .doc .bd b { font-size:13px; } .doc .bd p { margin:5px 0 0; font-size:12px; color:#333; white-space:pre-wrap; line-height:1.45; }
+  .doc .acts { display:flex; gap:6px; flex-wrap:wrap; margin-top:7px; }
+  .doc a { color:var(--g); font-weight:800; font-size:12px; text-decoration:none; }
+  .tchip { display:inline-block; font-size:10px; font-weight:800; border-radius:6px; padding:2px 7px; color:#fff; margin-right:6px; vertical-align:1px; }
+  .plist .p { display:flex; align-items:center; gap:10px; padding:10px 12px; background:#fff; border-radius:11px; margin-bottom:6px; cursor:pointer; border:1.5px solid var(--line); }
+  .plist .p:hover { border-color:var(--g); }
+  .msg { font-size:12.5px; color:var(--muted); padding:10px 4px; line-height:1.5; } .msg.err { color:var(--bad); }
+  .note { background:#fff7e0; border:1px solid #e8d38f; border-radius:10px; padding:10px 12px; font-size:12px; color:#6b5512; line-height:1.5; margin-bottom:12px; }
+  .center { min-height:70vh; display:flex; align-items:center; justify-content:center; }
+  .center-card { background:#fff; border-radius:18px; max-width:420px; width:100%; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.12); }
+  .center-head { background:linear-gradient(135deg,#1C3A1C,#2E6B2E); color:#fff; text-align:center; padding:22px 16px; }
+  .center-head img { width:76px; height:76px; border-radius:50%; background:#fff; } .center-head h2 { margin:10px 0 2px; letter-spacing:2px; } .center-head p { margin:0; font-size:11px; opacity:.85; }
+  .center-body { padding:18px; text-align:center; line-height:1.5; font-size:13px; }
+  .only-box { background:#fdecec; border:1.5px solid #e3a3a3; border-radius:12px; padding:12px 14px; margin:0 0 14px; color:#6b1a1a; font-size:13px; line-height:1.45; text-align:center; }
+  .only-box b { display:block; font-size:15px; letter-spacing:.5px; text-transform:uppercase; color:#a11d1d; margin-bottom:4px; }
+  .only-box a { display:block; margin-top:10px; padding:10px; border-radius:10px; background:#fff; border:1px solid #e3a3a3; color:#a11d1d; font-weight:800; text-decoration:none; }
+  .big-btn { width:100%; margin-top:12px; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#2E6B2E,#3d8a3d); color:#fff; font-weight:800; letter-spacing:1.5px; cursor:pointer; font-size:14px; }
+  .err-box { display:none; margin-top:10px; color:var(--bad); font-size:12px; } .err-box.show { display:block; }
+  .small-link { display:block; margin-top:12px; color:var(--g); font-size:12px; }
+  .toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(140%); background:#1b261b; color:#fff; padding:11px 16px; border-radius:12px; font-size:13px; transition:transform .25s; z-index:99; max-width:92vw; box-shadow:0 6px 20px rgba(0,0,0,.3); }
+  .toast.show { transform:translateX(-50%) translateY(0); } .toast.err { background:var(--bad); }
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .overlay.show { display:flex; }
+  .sheet { background:#fff; border-radius:16px; max-width:480px; width:100%; max-height:86vh; overflow:auto; padding:18px; }
+  .sheet h2 { margin:0 0 10px; font-size:16px; }
+  .sheet p { line-height:1.5; font-size:13px; }
+  @media (max-width:560px) { .row2 { grid-template-columns:1fr; } header p { max-width:52vw; } }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="" onclick="go('home')" style="cursor:pointer">
+  <div class="t" onclick="go('home')" style="cursor:pointer"><h1>NCEMS Forms</h1><p id="hdr-sub">CG Staff only</p></div>
+  <button class="icon-btn" onclick="go('home')" title="Forms home" aria-label="Forms home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>
+  <button class="icon-btn" onclick="go('search')" title="Search" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg></button>
+  <button class="icon-btn" onclick="openInfo()" title="Info" aria-label="Info" style="font-weight:800;font-style:italic;font-family:Georgia,serif">i</button>
+</header>
+
+<main id="main"><div class="msg">Loading...</div></main>
+
+<div class="overlay" id="ov" onclick="if(event.target===this)closeOv()"><div class="sheet" id="ov-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   NCEMS Forms  (forms.northcountryems.org)
+   Write ups, quick notes and SOG drafts for the CG Staff. Makes a Word
+   file in the agency's format and files it in the Personnel Files
+   folder on the CG Staff SharePoint site. Search by employee.
+   ===================================================================== */
+const VERSION = '1.0';
+
+const CONFIG = {
+  clientId:  '254c214f-bfe2-4ebb-9294-99815e167ab0',   // same Entra app as CG Staff and Facilities and Grounds
+  tenantId:  '153dc089-095e-4a20-8d10-39321a0aca09',
+  siteHost:  'northcountryemsorg.sharepoint.com',
+  sitePath:  '/sites/BattalionChiefLocal',             // CG Staff site
+  refFolder: 'Forms Reference',                        // policy-manual.md and cba.md live here
+  personnelFolder: 'Personnel Files',                  // one folder per employee: "Last, First"
+  sogFolder: 'SOG Drafts',
+  hubUrl:    'https://hub.northcountryems.org/',
+  cgUrl:     'https://cgstaff.northcountryems.org/',
+  /* who can open Forms (lower case) */
+  staff: ['d.boyce@northcountryems.org', 'd.langdon@northcountryems.org', 'd.madler@northcountryems.org', 'b.shirley@northcountryems.org', 'c.andrus@northcountryems.org', 'n.stafford@northcountryems.org', 'k.reid@northcountryems.org'],
+  /* who can search and open personnel files. The real lock is the SharePoint folder permission. */
+  personnel: ['d.boyce@northcountryems.org', 'd.langdon@northcountryems.org', 'd.madler@northcountryems.org', 'b.shirley@northcountryems.org', 'c.andrus@northcountryems.org'],
+  /* name and title on the FROM line and the signature block */
+  signers: {
+    'd.boyce@northcountryems.org':   ['Douglas Boyce', 'Battalion Chief'],
+    'd.langdon@northcountryems.org': ['Derek Langdon', 'Battalion Chief'],
+    'd.madler@northcountryems.org':  ['Dennis Madler', 'Battalion Chief'],
+    'b.shirley@northcountryems.org': ['Bryce Shirley', 'Fire Chief'],
+    'c.andrus@northcountryems.org':  ['Chuck Andrus', 'Division Chief'],
+    'k.reid@northcountryems.org':    ['Kim Reid', ''],
+    'n.stafford@northcountryems.org':['Nick Stafford', '']
+  },
+  chief: ['Bryce Shirley', 'Fire Chief']
+};
+const SCOPES = ['Sites.ReadWrite.All'];
+const GRAPH = 'https://graph.microsoft.com/v1.0';
+const DEMO = /[?&]demo=1/.test(location.search);
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classList.toggle('err', !!err); t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), err ? 6000 : 2600); }
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function isoToUS(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? (+m[2]) + '/' + (+m[3]) + '/' + m[1] : (s || ''); }
+function addDays(iso, n) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return ''; const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + n)); return d.toISOString().slice(0, 10); }
+function weekOf(iso) { return isoToUS(iso).replace(/\/\d{4}$/, ''); }
+function closeOv() { $('ov').classList.remove('show'); }
+function openOv(html) { $('ov-body').innerHTML = html; $('ov').classList.add('show'); }
+
+/* ---------------- who am I ---------------- */
+let msalApp = null, account = null, siteId = null, driveId = null;
+function meEmail() { return DEMO ? 'd.boyce@northcountryems.org' : ((account && account.username) || '').toLowerCase(); }
+function isStaff() { return CONFIG.staff.indexOf(meEmail()) >= 0; }
+function canPersonnel() { return CONFIG.personnel.indexOf(meEmail()) >= 0; }
+function signer() { const s = CONFIG.signers[meEmail()]; return s ? { name: s[0], title: s[1] } : { name: (account && account.name) || meEmail(), title: '' }; }
+
+/* ---------------- auth (same pattern as CG Staff) ---------------- */
+function redirectUri() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
+function loginHint() { try { return localStorage.getItem('ncems_login_hint') || ''; } catch (e) { return ''; } }
+function saveLoginHint(u) { try { if (u) localStorage.setItem('ncems_login_hint', String(u).toLowerCase()); } catch (e) {} }
+async function initAuth() {
+  if (typeof msal === 'undefined') throw new Error('Could not load Microsoft sign-in. Check the connection and reopen.');
+  msalApp = new msal.PublicClientApplication({
+    auth: { clientId: CONFIG.clientId, authority: 'https://login.microsoftonline.com/' + CONFIG.tenantId, redirectUri: redirectUri(), navigateToLoginRequestUrl: false },
+    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+  });
+  await msalApp.initialize();
+  const res = await msalApp.handleRedirectPromise();
+  account = (res && res.account) || msalApp.getActiveAccount() || msalApp.getAllAccounts()[0] || null;
+  const urlHint = new URLSearchParams(location.search).get('login_hint');
+  if (urlHint) { saveLoginHint(urlHint); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+  if (!account && loginHint()) {
+    try { const r = await msalApp.ssoSilent({ scopes: SCOPES, loginHint: loginHint() }); if (r && r.account) account = r.account; }
+    catch (e) {
+      let hopped = false; try { hopped = sessionStorage.getItem('ncems_sso_hop') === '1'; sessionStorage.setItem('ncems_sso_hop', '1'); } catch (er) {}
+      if (urlHint && !hopped) { await msalApp.loginRedirect({ scopes: SCOPES, loginHint: loginHint() }); return; }
+    }
+  }
+  if (account) { msalApp.setActiveAccount(account); saveLoginHint(account.username); try { sessionStorage.removeItem('ncems_sso_hop'); } catch (e) {} }
+}
+function signIn() {
+  $('signin-err').classList.remove('show');
+  msalApp.loginRedirect(loginHint() ? { scopes: SCOPES, loginHint: loginHint() } : { scopes: SCOPES, prompt: 'select_account' })
+    .catch(e => { const b = $('signin-err'); b.textContent = (e && (e.errorMessage || e.message)) || String(e); b.classList.add('show'); });
+}
+function signOut() { if (DEMO) { location.href = location.pathname; return; } try { localStorage.removeItem('ncems_login_hint'); } catch (e) {} msalApp.logoutRedirect({ account, postLogoutRedirectUri: redirectUri() }); }
+async function getToken() {
+  try { return (await msalApp.acquireTokenSilent({ scopes: SCOPES, account })).accessToken; }
+  catch (e) {
+    if (e instanceof msal.InteractionRequiredAuthError || /interaction_required|login_required|consent_required/.test(e.errorCode || '')) { await msalApp.acquireTokenRedirect({ scopes: SCOPES, account }); return new Promise(() => {}); }
+    throw e;
+  }
+}
+
+/* ---------------- Graph ---------------- */
+async function graphRaw(path, opts, tries) {
+  opts = opts || {}; tries = tries || 0;
+  const url = path.startsWith('http') ? path : GRAPH + path;
+  const headers = Object.assign({ Authorization: 'Bearer ' + await getToken() }, opts.headers || {});
+  let body = opts.body;
+  if (opts.json !== undefined) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(opts.json); }
+  let res;
+  try { res = await fetch(url, { method: opts.method || 'GET', headers, body }); }
+  catch (e) { const err = new Error('No connection. Check signal and try again.'); err.status = 0; throw err; }
+  if ((res.status === 429 || res.status === 503) && tries < 3) { await sleep(Math.min(10, Number(res.headers.get('Retry-After')) || 2 ** tries) * 1000); return graphRaw(path, opts, tries + 1); }
+  if (!res.ok) {
+    let msg = 'HTTP ' + res.status;
+    try { const j = await res.json(); if (j.error && j.error.message) msg = j.error.message; } catch (e) {}
+    if (res.status === 403) msg = 'No permission for that folder. (' + msg + ')';
+    const err = new Error(msg); err.status = res.status; throw err;
+  }
+  return res;
+}
+async function graph(path, opts) { const r = await graphRaw(path, opts); if (r.status === 204) return null; const ct = r.headers.get('content-type') || ''; return ct.includes('json') ? r.json() : null; }
+async function getDrive() {
+  if (driveId) return driveId;
+  const s = await graph('/sites/' + CONFIG.siteHost + ':' + CONFIG.sitePath + '?$select=id'); siteId = s.id;
+  const d = await graph('/sites/' + siteId + '/drive?$select=id'); driveId = d.id; return driveId;
+}
+function encPath(p) { return p.split('/').map(encodeURIComponent).join('/'); }
+async function uploadFile(folderPath, name, blob) {
+  const d = await getDrive();
+  return graph('/drives/' + d + '/root:/' + encPath(folderPath + '/' + name) + ':/content?@microsoft.graph.conflictBehavior=rename', { method: 'PUT', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
+}
+async function listFolder(folderPath) {
+  const d = await getDrive();
+  try { const j = await graph('/drives/' + d + '/root:/' + encPath(folderPath) + ':/children?$top=999&$select=id,name,webUrl,file,folder,size,lastModifiedDateTime,createdBy'); return j.value || []; }
+  catch (e) { if (e.status === 404) return []; throw e; }
+}
+async function readText(itemOrPath) {
+  const d = await getDrive();
+  const p = itemOrPath.id ? '/drives/' + d + '/items/' + itemOrPath.id + '/content' : '/drives/' + d + '/root:/' + encPath(itemOrPath) + ':/content';
+  const r = await graphRaw(p); return r.text();
+}
+
+/* =====================================================================
+   Built in library: policy and standards wording from the agency's own
+   write ups. Policy search (below) adds anything else from the manual.
+   ===================================================================== */
+const LIB = {
+  policies: [
+    { id: 'p1053_4', title: 'Policy 1053.4, Progressive Discipline', quote: 'Progressive Discipline is a system of discipline where the penalties, or disciplinary actions, increase upon repeat occurrences and consists of a series of steps.' },
+    { id: 'p325_3', title: 'Policy 325.3, Responsibilities', quote: 'Members must be "familiar with and obedient to the policies, standard operating procedures, classification specifications, duties as assigned and any other lawful instruction or order from a superior officer."' },
+    { id: 'p325_5', title: 'Policy 325.5, Competent Performance (Performance of Duties)', quote: 'Members must perform their duties "in a manner which will maintain the highest standards of efficiency in carrying out the functions and objectives of the Agency," and violations include "failure to conform to the work standards... any other failure to demonstrate good conduct or an appropriate workplace attitude."' },
+    { id: 'p1014_3', title: 'Policy 1014.3, Professional Conduct', quote: 'Requires members to conduct themselves in a way that maintains good order and discipline, and prohibits actions that undermine professionalism, which includes providing accurate and honest communication.' }
+  ],
+  standards: [
+    { id: 'cc_als', title: 'Clark County ALS Protocols', quote: '"ALL REPORTS MUST BE COMPLETED PRIOR TO THE END OF SHIFT."' },
+    { id: 'wac242', title: 'WAC 246-976-242', quote: 'EMS providers must complete documentation in a timely manner to support continuity of care, system review, and patient safety.' },
+    { id: 'ompd_sync', title: 'OMPD and Receiving Hospital Recommendation', quote: 'Charts are to be synced as soon as possible so the hospital has prehospital information available for continued patient care.' },
+    { id: 'mpd_pcep', title: 'Clark County MPD PCEP/OTEP Requirements', quote: '100% annual completion of PCEP lectures and case reviews. Skills participation is dependent on prior completion of didactic content.' }
+  ]
+};
+function libItem(id) { return LIB.policies.concat(LIB.standards).find(x => x.id === id); }
+
+/* =====================================================================
+   Form definitions. Field types:
+   person  employee name + position      text / date / area   one value
+   list    bullet lines                  pairs  two inputs per line
+   rows    table rows                    topics heading + text blocks
+   policies / standards   checklists that add the quoted wording
+   seg     pick one        toggle  yes/no
+   Lines in a big box that start with "- " come out as bullets in Word.
+   ===================================================================== */
+const TYPES = {
+  quick:   { name: 'Quick Note', icon: '&#128204;', color: '#5b6b7a', sub: 'Small note, good or bad, not a coaching', file: 'Quick Note' },
+  coach:   { name: 'Documented Coaching', icon: '&#128172;', color: '#2f7d4f', sub: 'Coaching talk written down. Not discipline', file: 'Documented Coaching' },
+  verbal:  { name: 'Written Verbal Reprimand', icon: '&#128483;', color: '#c9a227', sub: 'Step 1, Policy 1053.4', file: 'Written Verbal Reprimand' },
+  written: { name: 'Written Reprimand', icon: '&#128221;', color: '#d9772b', sub: 'Step 2, Policy 1053.4', file: 'Written Reprimand' },
+  cap:     { name: 'Corrective Action Plan', icon: '&#128203;', color: '#b91c1c', sub: 'Policy 1053.5. Short or detailed. Chief approves', file: 'Corrective Action Plan' },
+  sog:     { name: 'SOG Draft', icon: '&#128209;', color: '#1F5C8B', sub: 'Standard Operating Guideline in the house format', file: 'SOG' },
+  other:   { name: 'Other document', icon: '&#128206;', color: '#7a8a7a', sub: '', file: 'Document' }
+};
+
+const REPRIMAND_STEPS = (kind) => [
+  { title: 'Who and when', fields: [
+    { t: 'person' }, { t: 'from' }, { t: 'date', k: 'date', label: 'Date' },
+    { t: 'text', k: 'subject', label: 'Subject', def: kind === 'verbal' ? 'Written Verbal Reprimand' : 'Written Reprimand' } ] },
+  { title: 'What happened', fields: [
+    { t: 'area', k: 'opening', label: 'Opening', def: 'This ' + (kind === 'verbal' ? 'written verbal reprimand' : 'written reprimand') + ' is issued per Policy 1053.4, Progressive Discipline, and serves as formal notice of [the performance or conduct problem] that must be corrected immediately.' },
+    { t: 'area', k: 'concernsIntro', label: 'Summary of concerns, lead in line', def: 'Your current performance reflects several areas of non-compliance and failure to meet agency expectations, including:', short: true },
+    { t: 'list', k: 'concerns', label: 'Summary of concerns', ph: 'One concern per line. Facts, dates, what was missed' },
+    { t: 'list', k: 'pattern', label: 'Pattern of behavior (optional)', ph: 'Only if it keeps happening' },
+    { t: 'pairs', k: 'timeline', label: 'Prior steps and dates', a: { label: 'Date', type: 'date' }, b: { label: 'What happened (coaching, email, reminder)' } },
+    { t: 'area', k: 'details', label: 'More details (optional)', ph: 'Anything else the record needs. Lines starting with "- " become bullets' } ] },
+  { title: 'Policies and standards', fields: [
+    { t: 'find' },
+    { t: 'standards', k: 'standards', label: 'Standards (protocol, WAC, MPD)' },
+    { t: 'policies', k: 'policies', label: 'Violated policies' } ] },
+  { title: 'Expectations', fields: [
+    { t: 'rows', k: 'expect', label: 'You are expected to', cols: [{ k: 'what', label: 'Expectation' }, { k: 'when', label: 'Deadline (optional)' }] },
+    { t: 'area', k: 'notice', label: 'Progressive discipline notice', def: 'This ' + (kind === 'verbal' ? 'written verbal reprimand' : 'written reprimand') + ' will remain in your personnel file. Any future violations, including failure to complete the above corrective actions, will result in continued progressive discipline, up to and including termination.' },
+    { t: 'area', k: 'closing', label: 'Closing line', def: 'We value your capabilities as a provider and expect a renewed level of accountability and engagement moving forward.', short: true },
+    { t: 'toggle', k: 'chiefLine', label: 'Add a signature line for the Fire Chief', def: false } ] }
+];
+
+const CAP_CONSEQ = d => d.mode === 'Detailed' ? 'This plan is not about ability; it is about consistently doing what is expected. These expectations come from the OMPD, agency policy, and the WAC, and they apply equally to every member.\n\nFailure to meet any requirement of this plan within the stated timelines, or a return to the patterns described above after the plan closes, will result in further progressive discipline per Policy 1053.4, up to and including termination. This Corrective Action Plan will be placed in your personnel file.' : 'Missing any of the deadlines above, or [a repeat of the problem] while this plan is in effect, will result in further disciplinary action up to and including suspension, demotion, or termination.';
+const FORMS = {
+  quick: [
+    { title: 'Quick note', fields: [
+      { t: 'person', noPosition: true }, { t: 'date', k: 'date', label: 'Date' },
+      { t: 'seg', k: 'kind', label: 'Kind', opts: ['Positive', 'Concern', 'FYI'], def: 'Positive' },
+      { t: 'text', k: 'title', label: 'Short title', ph: 'Great call on the cardiac arrest, late to shift, etc.' },
+      { t: 'area', k: 'note', label: 'Note', ph: 'What happened, in a few lines' } ] }
+  ],
+  coach: [
+    { title: 'Who and when', fields: [
+      { t: 'person' }, { t: 'from' }, { t: 'date', k: 'date', label: 'Date' },
+      { t: 'text', k: 'subject', label: 'Subject', def: 'Documented Coaching: [topic]' } ] },
+    { title: 'What you talked about', fields: [
+      { t: 'area', k: 'intro', label: 'Intro', def: 'This is an overview of the key points we spoke about on [date]. Feel free to add to these topics, as we intend to help guide you through the improvements that need to be made.', short: true },
+      { t: 'topics', k: 'topics', label: 'Topics' },
+      { t: 'rows', k: 'tasks', label: 'Follow up tasks (optional)', cols: [{ k: 'what', label: 'Task' }, { k: 'when', label: 'Due' }] },
+      { t: 'area', k: 'closing', label: 'Closing', def: 'If you have any questions or need more guidance, please ask. I appreciate your effort in meeting these expectations and am here to support you.', short: true },
+      { t: 'toggle', k: 'sigLines', label: 'Add signature lines (employee acknowledges)', def: true } ] }
+  ],
+  verbal: REPRIMAND_STEPS('verbal'),
+  written: REPRIMAND_STEPS('written'),
+  cap: [
+    { title: 'Who and when', fields: [
+      { t: 'person' }, { t: 'from' }, { t: 'date', k: 'date', label: 'Date' },
+      { t: 'text', k: 'subject', label: 'Subject', def: 'Corrective Action Plan' },
+      { t: 'seg', k: 'mode', label: 'Length', opts: ['Short', 'Detailed'], def: 'Short', hint: 'Short: plain language, like a first time issue. Detailed: data, a requirements table and measures, for a pattern that has gone on a while.' } ] },
+    { title: 'Opening and plan period', fields: [
+      { t: 'area', k: 'opening', label: 'Opening', defBy: d => d.mode === 'Detailed'
+        ? 'This Corrective Action Plan (CAP) is issued per Policy 1053.5. It follows [prior steps and their dates]. Each deficiency described below could independently warrant further progressive discipline. In lieu of that step, the agency is placing you on this Corrective Action Plan with specific, measurable requirements and deadlines.'
+        : 'This Corrective Action Plan is issued per Policy 1053.5 and accompanies the [written reprimand] of the same date. It is not additional discipline. Its purpose is to [what this plan fixes], and to make sure it does not happen again.' },
+      { t: 'date', k: 'start', label: 'Plan starts' },
+      { t: 'text', k: 'days', label: 'Length in days', defBy: d => d.mode === 'Detailed' ? '90' : '180' },
+      { t: 'text', k: 'checks', label: 'Check ins (days, comma separated)', defBy: d => d.mode === 'Detailed' ? '30, 60, 90' : '30, 90, 180' },
+      { t: 'planauto' } ] },
+    { title: 'The problem', show: d => d.mode !== 'Detailed', fields: [
+      { t: 'area', k: 'wrong', label: 'What went wrong', ph: 'Plain facts, dates' },
+      { t: 'list', k: 'fixing', label: 'What this plan is fixing', ph: 'One line each' } ] },
+    { title: 'Background and findings', show: d => d.mode === 'Detailed', fields: [
+      { t: 'area', k: 'background', label: 'Background', ph: 'Earlier coaching and discipline, what was asked' },
+      { t: 'rows', k: 'prior', label: 'Last step\'s requirements and status', cols: [{ k: 'what', label: 'Requirement' }, { k: 'status', label: 'Status', type: 'select', opts: ['Not met', 'Met', 'Partly met'] }] },
+      { t: 'topics', k: 'findings', label: 'Findings', topicPh: 'Heading, like System Logins or Chart Timeliness', bodyPh: 'Facts and data. Start lines with "- " for bullets' },
+      { t: 'find' },
+      { t: 'standards', k: 'standards', label: 'Applicable standards' },
+      { t: 'policies', k: 'policies', label: 'Agency policy' } ] },
+    { title: 'What needs to happen', show: d => d.mode !== 'Detailed', fields: [
+      { t: 'pairs', k: 'youDo', label: 'What you need to do', a: { label: 'When (Within 5 business days, Ongoing)' }, b: { label: 'Task' } },
+      { t: 'list', k: 'districtDo', label: 'What the District will do' },
+      { t: 'pairs', k: 'checkins', label: 'Check ins', a: { label: 'When (30 days)' }, b: { label: 'What is reviewed' } },
+      { t: 'area', k: 'consequence', label: 'If this does not get done', defBy: CAP_CONSEQ, short: true },
+      { t: 'area', k: 'standing', label: 'A note on where this stands (optional)', ph: 'Why this level of action, what closes it' } ] },
+    { title: 'Corrective actions', show: d => d.mode === 'Detailed', fields: [
+      { t: 'rows', k: 'actions', label: 'Corrective actions and timelines', cols: [{ k: 'what', label: 'Requirement' }, { k: 'when', label: 'Deadline' }, { k: 'measure', label: 'Measure of success' }] },
+      { t: 'text', k: 'reviewers', label: 'Reviews done by', def: '' },
+      { t: 'list', k: 'support', label: 'Agency support', def: ['Periodic progress reports from the Training Division.', 'Access to the full underlying data on request.', 'Prompt follow up on any reported equipment, connectivity, or access barriers.', 'Review support from the Training Division, peers, and the on duty Battalion Chief.'] },
+      { t: 'area', k: 'consequence', label: 'Expectations and consequences', defBy: CAP_CONSEQ } ] }
+  ],
+  sog: [
+    { title: 'Title and header', fields: [
+      { t: 'text', k: 'title', label: 'SOG title', ph: 'Specialized Equipment Operations' },
+      { t: 'seg', k: 'agencies', label: 'Covers', opts: ['NCEMS / Clark County Fire District 13', 'NCEMS / Clark County Fire District 13 / Volcano Rescue Team', 'North Country EMS'], def: 'NCEMS / Clark County Fire District 13' },
+      { t: 'text', k: 'num', label: 'Guideline #', def: '[TBD]' }, { t: 'text', k: 'effective', label: 'Effective date', def: '[TBD]' },
+      { t: 'seg', k: 'division', label: 'Division', opts: ['Training', 'Logistics', 'Operations'], def: 'Training' },
+      { t: 'text', k: 'revision', label: 'Revision', def: 'Draft v1' },
+      { t: 'text', k: 'applies', label: 'Applies to', ph: 'All NCEMS personnel' },
+      { t: 'text', k: 'approved', label: 'Approved by', def: 'Fire Chief' },
+      { t: 'text', k: 'owner', label: 'Document owner (role, not name)', defBy: d => (d.division || 'Training') + ' BC' },
+      { t: 'text', k: 'cycle', label: 'Review cycle', def: 'Annual' } ] },
+    { title: 'Purpose and scope', fields: [
+      { t: 'area', k: 'purpose', label: '1.0 Purpose', ph: 'What this SOG sets up and why, in plain terms. A concrete example if the rule could be misread' },
+      { t: 'area', k: 'scope', label: '2.0 Scope', ph: 'Who and what it covers, and what it does NOT cover (point to the policy that does)' } ] },
+    { title: 'Sections', fields: [
+      { t: 'topics', k: 'sections', label: 'Numbered sections (3.0 on)', topicPh: 'Section heading, like Roles and Responsibilities', bodyPh: 'Rules and steps. "- " for bullets. Use must, shall, may and never on purpose. "3.1 Heading" on its own line starts a subsection' } ] },
+    { title: 'References and appendices', fields: [
+      { t: 'find', forSog: true },
+      { t: 'list', k: 'refs', label: 'References', ph: 'NCEMS/Clark Fire 13 Policy ###, Title  or  CBA Article #.#, Title' },
+      { t: 'topics', k: 'appx', label: 'Appendices (optional)', topicPh: 'Appendix title', bodyPh: 'Verbatim CBA text, checklists, issue lists' } ] }
+  ]
+};
+
+/* ---------------- state ---------------- */
+let route = 'home', doc = null, step = 0, personCache = null, pol = null, polLoading = null, lastResults = [];
+function freshDoc(type) {
+  const s = signer();
+  const d = { type, employee: '', position: '', fromName: s.name, fromTitle: s.title, date: todayISO(), start: todayISO(), save: true };
+  FORMS[type].forEach(st => st.fields.forEach(f => {
+    if (!f.k || d[f.k] !== undefined) return;
+    if (f.t === 'list' || f.t === 'pairs' || f.t === 'rows' || f.t === 'topics' || f.t === 'policies' || f.t === 'standards') d[f.k] = Array.isArray(f.def) ? f.def.slice() : [];
+    else if (f.t === 'toggle') d[f.k] = !!f.def;
+    else if (f.def !== undefined) d[f.k] = f.def;
+  }));
+  d.extraPolicies = [];
+  applyDefBy(d, true);
+  return d;
+}
+function applyDefBy(d, force) {
+  FORMS[d.type].forEach(st => st.fields.forEach(f => {
+    if (!f.defBy) return;
+    const v = f.defBy(d);
+    if (force || d['_auto_' + f.k] === d[f.k] || d[f.k] === undefined || d[f.k] === '') { d[f.k] = v; d['_auto_' + f.k] = v; }
+  }));
+}
+function steps() { return FORMS[doc.type].filter(s => !s.show || s.show(doc)); }
+
+/* ---------------- routing ---------------- */
+function go(r) {
+  if (doc && route.startsWith('form') && r !== route && !confirm('Leave this form? What you typed is not saved anywhere.')) return;
+  if (!r.startsWith('form')) doc = null;
+  route = r; window.scrollTo(0, 0); render();
+}
+function startForm(type) { doc = freshDoc(type); step = 0; route = 'form'; window.scrollTo(0, 0); render(); }
+
+function render() {
+  const m = $('main');
+  if (route === 'home') return renderHome(m);
+  if (route === 'search') return renderSearch(m);
+  if (route.startsWith('person:')) return renderPerson(m, route.slice(7));
+  if (route === 'form') return renderForm(m);
+}
+
+/* ---------------- home ---------------- */
+function tile(type, onclick) { const T = TYPES[type]; return '<button class="tile" style="--c:' + T.color + '" onclick="' + (onclick || "startForm('" + type + "')") + '"><i>' + T.icon + '</i><div><b>' + T.name + '</b><em>' + T.sub + '</em></div></button>'; }
+function renderHome(m) {
+  const s = signer(), now = new Date();
+  m.innerHTML = '<div class="hello"><h2>' + (now.getHours() < 12 ? 'Morning' : now.getHours() < 17 ? 'Afternoon' : 'Evening') + ', ' + esc(s.name.split(' ')[0]) + '</h2><span>' + esc(s.name) + (s.title ? ', ' + esc(s.title) : '') + (DEMO ? ' · DEMO, nothing saves' : '') + '</span></div>' +
+    (canPersonnel() ? '<div class="lbl">Search an employee</div><div class="search-big"><input class="inp" id="home-q" placeholder="Name, like Komm" onkeydown="if(event.key===\'Enter\'){searchQ=this.value;go(\'search\')}"><button class="btn" onclick="searchQ=$(\'home-q\').value;go(\'search\')">Search</button></div>' : '') +
+    '<div class="lbl">Notes and write ups</div><div class="tiles">' + ['quick', 'coach', 'verbal', 'written', 'cap'].map(t => tile(t)).join('') + '</div>' +
+    '<div class="lbl">SOG help</div><div class="tiles">' + tile('sog') + '<button class="tile" style="--c:#7a8a7a" onclick="openPolicyOnly()"><i>&#128270;</i><div><b>Find a policy</b><em>Describe the problem, see the policies that fit</em></div></button></div>' +
+    '<div class="note" style="margin-top:18px">Write ups go in <b>' + esc(CONFIG.personnelFolder) + '</b> on the CG Staff SharePoint site, one folder per employee. Employees sign the printed copy by hand.</div>';
+}
+
+/* ---------------- policy search (no AI) ----------------
+   Loads the policy manual and CBA from the CG Staff SharePoint site (Forms Reference folder),
+   splits them into sections, then scores sections against the words in the problem description,
+   with EMS words that mean the same thing grouped together.                                    */
+const SYN = [
+  ['chart', 'charts', 'charting', 'pcr', 'epcr', 'documentation', 'document', 'report', 'reports', 'reporting', 'narrative', 'eso', 'record', 'records'],
+  ['finish', 'finished', 'complete', 'completed', 'completion', 'incomplete'],
+  ['late', 'tardy', 'tardiness', 'punctual', 'punctuality', 'timely', 'delay', 'delayed'],
+  ['email', 'emails', 'communication', 'communicate', 'respond', 'reply', 'message'],
+  ['phone', 'cell', 'cellphone', 'mobile', 'device', 'personal'],
+  ['training', 'otep', 'pcep', 'cme', 'course', 'education', 'class', 'vector', 'target'],
+  ['lie', 'lied', 'lying', 'dishonest', 'honest', 'honesty', 'truthful', 'false', 'falsify', 'falsified', 'untruthful', 'inaccurate', 'misrepresent'],
+  ['insubordination', 'insubordinate', 'disobey', 'refuse', 'refused', 'order', 'orders', 'directive', 'lawful'],
+  ['drive', 'driving', 'driver', 'vehicle', 'apparatus', 'ambulance', 'backing', 'crash', 'accident', 'collision'],
+  ['uniform', 'appearance', 'dress', 'grooming', 'attire'],
+  ['sick', 'leave', 'absence', 'absent', 'callout', 'attendance'],
+  ['harass', 'harassment', 'discrimination', 'hostile', 'bully', 'bullying'],
+  ['drug', 'drugs', 'alcohol', 'alcoholic', 'impaired', 'intoxicated', 'intoxication', 'influence', 'substance', 'smell', 'smelling', 'odor'],
+  ['narcotic', 'narcotics', 'controlled', 'fentanyl', 'diversion', 'waste'],
+  ['social', 'media', 'networking', 'speech', 'facebook', 'instagram', 'post', 'posted', 'posting', 'internet', 'online'],
+  ['patient', 'care', 'treatment', 'protocol', 'protocols'],
+  ['hipaa', 'privacy', 'confidential', 'confidentiality', 'phi'],
+  ['shift', 'trade', 'swap', 'overtime', 'schedule'],
+  ['discipline', 'disciplinary', 'reprimand', 'corrective', 'cap', 'progressive'],
+  ['certification', 'certified', 'license', 'credential', 'expired', 'lapse', 'recert']
+];
+const STOP = new Set('a an the and or but of to in on at for by with from is are was were be been being it its this that these those he she they his her their him them you your i we our not no do did does done didnt doesnt dont have has had will would should could can may might must shall about into over after before during than then there here what when where which who why how all any each every some more most other such only own same so too very just also again once'.split(' '));
+function stem(w) { return w.replace(/(ing|ed|es|s)$/, '').replace(/(.)\1$/, '$1'); }
+function words(s) { return String(s).toLowerCase().replace(/[^a-z0-9.\s]/g, ' ').split(/\s+/).filter(w => w && w.length > 1 && !STOP.has(w)); }
+/* each word in the description becomes a group: the word itself (weight 1) plus words that mean the same (0.6) */
+function qgroups(q) {
+  return words(q).map(w => {
+    const g = new Map([[stem(w), 1]]);
+    SYN.forEach(set => { if (set.some(x => stem(x) === stem(w))) set.forEach(x => { if (!g.has(stem(x))) g.set(stem(x), 0.6); }); });
+    return g;
+  });
+}
+function expand(q) { const out = new Map(); qgroups(q).forEach(g => g.forEach((wt, w) => { if (!out.has(w) || out.get(w) < wt) out.set(w, wt); })); return out; }
+function splitSections(text, source) {
+  const lines = text.replace(/\r/g, '').split('\n'), out = [];
+  let policyTitle = '', cur = null;
+  const push = () => { if (cur && cur.body.trim().length > 30) out.push(cur); };
+  for (const raw of lines) {
+    const line = raw.replace(/\*\*/g, '').trim();
+    const h = /^#{1,4}\s+(.+)$/.exec(line);
+    const num = /^(?:#{1,4}\s+)?(\d{3,4}\.\d+(?:\.\d+)?)\s+(.{3,90})$/.exec(line);
+    const art = /^(?:#{1,4}\s+)?(ARTICLE\s+\d+|Article\s+\d+(?:\.\d+)?)[\s:.\u2013-]*(.{0,90})$/.exec(line);
+    if (num && /[A-Za-z]/.test(num[2])) { push(); cur = { source, id: num[1], title: num[2].replace(/[#*]/g, '').trim(), policy: policyTitle, body: '' }; continue; }
+    if (art) { push(); cur = { source, id: art[1].replace(/article/i, 'Article'), title: (art[2] || '').trim(), policy: '', body: '' }; continue; }
+    if (h) { const t = h[1].replace(/[#*]/g, '').trim(); if (!/^\d/.test(t) && t.length < 80) { policyTitle = t; } push(); cur = { source, id: '', title: t, policy: policyTitle, body: '' }; continue; }
+    if (cur) cur.body += raw + '\n';
+  }
+  push();
+  out.forEach(s => { s.tokens = new Map(); let n = 0; words(s.title + ' ' + s.policy).forEach(w => s.tokens.set(stem(w), (s.tokens.get(stem(w)) || 0) + 3)); words(s.body).forEach(w => { n++; s.tokens.set(stem(w), (s.tokens.get(stem(w)) || 0) + 1); }); s.len = n + 10; });
+  return out;
+}
+async function loadPolicy() {
+  if (pol) return pol;
+  if (polLoading) return polLoading;
+  polLoading = (async () => {
+    let manual = '', cba = '';
+    if (DEMO) { manual = DEMO_POLICY; cba = ''; }
+    else {
+      const ref = CONFIG.refFolder + '/';
+      [manual, cba] = await Promise.all([readText(ref + 'policy-manual.md').catch(() => ''), readText(ref + 'cba.md').catch(() => '')]);
+      if (!manual) throw new Error('Could not open ' + ref + 'policy-manual.md on the CG Staff site.');
+    }
+    pol = splitSections(manual, 'Policy').concat(cba ? splitSections(cba, 'CBA') : []);
+    indexPolicy();
+    return pol;
+  })();
+  try { return await polLoading; } finally { polLoading = null; }
+}
+/* BM25: rare words count more than common ones, long sections don't win just for being long */
+let DF = null, AVG = 1;
+function indexPolicy() { DF = new Map(); let tot = 0; pol.forEach(s => { tot += s.len; s.tokens.forEach((_, w) => DF.set(w, (DF.get(w) || 0) + 1)); }); AVG = tot / Math.max(1, pol.length); }
+function bm25(s, w) { const tf = s.tokens.get(w) || 0; if (!tf) return 0; const N = pol.length, df = DF.get(w) || 1; const idf = Math.log(1 + (N - df + .5) / (df + .5)); return idf * tf * 2.2 / (tf + 1.2 * (.25 + .75 * s.len / AVG)); }
+function searchPolicy(q) {
+  if (!DF) indexPolicy();
+  const gs = qgroups(q); if (!gs.length || !pol) return [];
+  const idn = (q.match(/\b\d{3,4}(\.\d+)?\b/) || [])[0];
+  return pol.map(s => {
+    let score = 0, hits = 0;
+    gs.forEach(g => { let best = 0; g.forEach((wt, w) => { best = Math.max(best, wt * bm25(s, w)); }); if (best) { hits++; score += best; } });
+    score = score * Math.pow(hits / gs.length, 1.2);
+    if (idn && s.id && (s.id === idn || s.id.startsWith(idn + '.'))) score += 100 - parseFloat('0.' + (s.id.split('.')[1] || '0'));
+    return { s, score };
+  }).filter(x => x.score > 1).sort((a, b) => b.score - a.score).slice(0, 8).map(x => x.s);
+}
+function cite(s) {
+  if (s.source === 'CBA') return 'CBA ' + (s.id || '') + (s.title ? ', ' + s.title : '');
+  return 'Policy ' + (s.id || '') + ', ' + (s.policy && s.policy.toUpperCase() !== s.title.toUpperCase() ? s.policy + ': ' : '') + titleCase(s.title);
+}
+function titleCase(t) { return /[a-z]/.test(t) ? t : t.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()); }
+function snippet(s, q) {
+  const body = s.body.replace(/\s+/g, ' ').trim(); const ws = [...expand(q).keys()];
+  let at = -1; for (const w of ws) { const i = body.toLowerCase().indexOf(w); if (i >= 0 && (at < 0 || i < at)) at = i; }
+  const start = Math.max(0, at - 80), txt = body.slice(start, start + 320);
+  return (start > 0 ? '... ' : '') + txt + (start + 320 < body.length ? ' ...' : '');
+}
+function findHtml(forSog) {
+  return '<div class="find"><div class="f" style="margin:0"><label>Find a policy: describe the problem</label>' +
+    '<div class="find-row"><input class="inp" id="pq" placeholder="didn\'t finish charts before end of shift" onkeydown="if(event.key===\'Enter\')runFind(' + (forSog ? 1 : 0) + ')"><button class="btn small" onclick="runFind(' + (forSog ? 1 : 0) + ')">Search</button></div>' +
+    '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;align-items:flex-start"><div><button class="ai-btn" onclick="aiAssist()">&#10024; AI assist</button><div class="ai-note">Not connected to AI yet</div></div></div>' +
+    '<div class="hint">Searches the whole policy manual and the CBA by meaning words (charts, PCR and documentation all match). Tap Add to put the policy in this form.</div></div><div class="res" id="pres"></div></div>';
+}
+async function runFind(forSog) {
+  const q = ($('pq') || {}).value || ''; const el = $('pres'); if (!q.trim()) return;
+  el.innerHTML = '<div class="msg">Loading the policy manual...</div>';
+  try { await loadPolicy(); } catch (e) { el.innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; return; }
+  lastResults = searchPolicy(q);
+  if (!lastResults.length) { el.innerHTML = '<div class="msg">Nothing matched. Try other words, or a policy number like 1053.</div>'; return; }
+  el.innerHTML = lastResults.map((s, i) => '<div class="r"><b>' + esc(cite(s)) + '</b><p>' + esc(snippet(s, q)) + '</p>' +
+    (doc ? '<button class="btn small" onclick="addFound(' + i + ',' + (forSog ? 1 : 0) + ')">Add</button> ' : '') + '<button class="btn small ghost" onclick="showFound(' + i + ')">Read</button></div>').join('');
+}
+function showFound(i) { const s = lastResults[i]; openOv('<h2>' + esc(cite(s)) + '</h2><div style="white-space:pre-wrap;font-size:12.5px;line-height:1.5">' + esc(s.body.trim().slice(0, 6000)) + '</div><br><button class="btn" onclick="closeOv()">Close</button>'); }
+function addFound(i, forSog) {
+  const s = lastResults[i];
+  if (forSog || doc.type === 'sog') {
+    const ref = s.source === 'CBA' ? cite(s) : 'NCEMS/Clark Fire 13 Policy ' + s.id + ', ' + titleCase(s.policy && !/^\d/.test(s.policy) ? s.policy : s.title);
+    doc.refs = doc.refs || []; if (doc.refs.indexOf(ref) < 0) doc.refs.push(ref);
+  } else {
+    const body = s.body.replace(/\s+/g, ' ').trim(); const quote = body.length > 360 ? body.slice(0, 360).replace(/\s\S*$/, '') + '...' : body;
+    if (!doc.extraPolicies.some(p => p.title === cite(s))) doc.extraPolicies.push({ title: cite(s), quote, on: true });
+  }
+  toast('Added ' + cite(s)); renderForm($('main'), true);
+}
+function aiAssist() {
+  openOv('<h2>&#10024; AI assist</h2><p><b>Not connected to AI yet.</b></p><p>When it is turned on, you will be able to describe a problem in your own words and get the best matching policies, plus a review of the whole write up for tone, missing facts and policy fit.</p><p>For now, use the regular search, or tap <b>Copy for Claude</b> on the last step and paste it into your own Claude.</p><button class="btn" onclick="closeOv()">Got it</button>');
+}
+function openPolicyOnly() {
+  openOv('<h2>Find a policy</h2>' + findHtml(false) + '<br><button class="btn ghost" onclick="closeOv()">Close</button>');
+}
+
+/* ---------------- form editor ---------------- */
+function v(k) { return doc[k] == null ? '' : doc[k]; }
+function setv(k, val) { doc[k] = val; }
+function onField(k, el) { doc[k] = el.value; if (k === 'mode' || k === 'division') { applyDefBy(doc); renderForm($('main'), true); } if (k === 'start' || k === 'days' || k === 'checks') { const a = $('planauto'); if (a) a.innerHTML = planAutoText(); } }
+function fieldHtml(f) {
+  const id = 'f_' + (f.k || f.t);
+  const L = l => '<label for="' + id + '">' + esc(l) + '</label>';
+  const hint = f.hint ? '<div class="hint">' + esc(f.hint) + '</div>' : '';
+  switch (f.t) {
+    case 'person': {
+      const dl = '<datalist id="people">' + (personCache || []).map(p => '<option value="' + esc(p.display) + '">').join('') + '</datalist>';
+      return '<div class="' + (f.noPosition ? '' : 'row2') + '"><div class="f"><label>Employee</label><input class="inp" list="people" value="' + esc(v('employee')) + '" placeholder="First Last" oninput="doc.employee=this.value">' + dl + '</div>' +
+        (f.noPosition ? '' : '<div class="f"><label>Position</label><input class="inp" list="positions" value="' + esc(v('position')) + '" placeholder="Paramedic" oninput="doc.position=this.value"><datalist id="positions"><option value="Paramedic"><option value="Lead Paramedic"><option value="Emergency Medical Technician"><option value="Part Time Paramedic"><option value="Part Time EMT"><option value="Volunteer"></datalist></div>') + '</div>';
+    }
+    case 'from':
+      return '<div class="row2"><div class="f"><label>From</label><input class="inp" value="' + esc(v('fromName')) + '" oninput="doc.fromName=this.value"></div><div class="f"><label>Your title</label><input class="inp" value="' + esc(v('fromTitle')) + '" placeholder="Battalion Chief" oninput="doc.fromTitle=this.value"></div></div>';
+    case 'text': return '<div class="f">' + L(f.label) + '<input class="inp" id="' + id + '" value="' + esc(v(f.k)) + '" placeholder="' + esc(f.ph || '') + '" oninput="onField(\'' + f.k + '\',this)">' + hint + '</div>';
+    case 'date': return '<div class="f">' + L(f.label) + '<input class="inp" type="date" id="' + id + '" value="' + esc(v(f.k)) + '" oninput="onField(\'' + f.k + '\',this)"></div>';
+    case 'area': return '<div class="f">' + L(f.label) + '<textarea class="inp' + (f.short ? ' short' : '') + '" id="' + id + '" placeholder="' + esc(f.ph || '') + '" oninput="onField(\'' + f.k + '\',this)">' + esc(v(f.k)) + '</textarea>' + hint + '</div>';
+    case 'seg': return '<div class="f"><label>' + esc(f.label) + '</label><div class="seg">' + f.opts.map(o => '<button type="button" class="' + (v(f.k) === o ? 'on' : '') + '" onclick="doc[\'' + f.k + '\']=' + esc(JSON.stringify(o)).replace(/"/g, '&quot;') + ';onField(\'' + f.k + '\',{value:doc[\'' + f.k + '\']});renderForm($(\'main\'),true)">' + esc(o) + '</button>').join('') + '</div>' + hint + '</div>';
+    case 'toggle': return '<label class="ck"><input type="checkbox" ' + (doc[f.k] ? 'checked' : '') + ' onchange="doc[\'' + f.k + '\']=this.checked"><div><b>' + esc(f.label) + '</b></div></label>';
+    case 'list': {
+      const arr = doc[f.k];
+      return '<div class="f"><label>' + esc(f.label) + '</label>' + arr.map((x, i) => '<div class="item"><textarea class="inp short" style="min-height:44px" placeholder="' + esc(f.ph || '') + '" oninput="doc[\'' + f.k + '\'][' + i + ']=this.value">' + esc(x) + '</textarea><button class="x" onclick="doc[\'' + f.k + '\'].splice(' + i + ',1);renderForm($(\'main\'),true)">&#215;</button></div>').join('') +
+        '<button class="add" onclick="doc[\'' + f.k + '\'].push(\'\');renderForm($(\'main\'),true)">+ Add a line</button></div>';
+    }
+    case 'pairs': {
+      const arr = doc[f.k];
+      return '<div class="f"><label>' + esc(f.label) + '</label>' + arr.map((x, i) => '<div class="grp"><div class="grp-h"><span>#' + (i + 1) + '</span><button class="x" style="height:28px;width:28px" onclick="doc[\'' + f.k + '\'].splice(' + i + ',1);renderForm($(\'main\'),true)">&#215;</button></div>' +
+        '<input class="inp" ' + (f.a.type === 'date' ? 'type="date"' : '') + ' style="margin-bottom:6px" placeholder="' + esc(f.a.label) + '" value="' + esc(x[0]) + '" oninput="doc[\'' + f.k + '\'][' + i + '][0]=this.value">' +
+        '<textarea class="inp short" placeholder="' + esc(f.b.label) + '" oninput="doc[\'' + f.k + '\'][' + i + '][1]=this.value">' + esc(x[1]) + '</textarea></div>').join('') +
+        '<button class="add" onclick="doc[\'' + f.k + '\'].push([\'\',\'\']);renderForm($(\'main\'),true)">+ Add</button></div>';
+    }
+    case 'rows': {
+      const arr = doc[f.k];
+      return '<div class="f"><label>' + esc(f.label) + '</label>' + arr.map((x, i) => '<div class="grp"><div class="grp-h"><span>#' + (i + 1) + '</span><button class="x" style="height:28px;width:28px" onclick="doc[\'' + f.k + '\'].splice(' + i + ',1);renderForm($(\'main\'),true)">&#215;</button></div>' +
+        f.cols.map(c => c.type === 'select'
+          ? '<select class="inp" style="margin-bottom:6px" onchange="doc[\'' + f.k + '\'][' + i + '][\'' + c.k + '\']=this.value">' + c.opts.map(o => '<option ' + (x[c.k] === o ? 'selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>'
+          : '<textarea class="inp short" style="margin-bottom:6px;min-height:42px" placeholder="' + esc(c.label) + '" oninput="doc[\'' + f.k + '\'][' + i + '][\'' + c.k + '\']=this.value">' + esc(x[c.k] || '') + '</textarea>').join('') + '</div>').join('') +
+        '<button class="add" onclick="doc[\'' + f.k + '\'].push(' + esc(JSON.stringify(Object.fromEntries(f.cols.map(c => [c.k, c.type === 'select' ? c.opts[0] : ''])))).replace(/"/g, '&quot;') + ');renderForm($(\'main\'),true)">+ Add a row</button></div>';
+    }
+    case 'topics': {
+      const arr = doc[f.k];
+      return '<div class="f"><label>' + esc(f.label) + '</label>' + arr.map((x, i) => '<div class="grp"><div class="grp-h"><span>' + (doc.type === 'sog' && f.k === 'sections' ? (i + 3) + '.0' : '#' + (i + 1)) + '</span><button class="x" style="height:28px;width:28px" onclick="doc[\'' + f.k + '\'].splice(' + i + ',1);renderForm($(\'main\'),true)">&#215;</button></div>' +
+        '<input class="inp" style="margin-bottom:6px" placeholder="' + esc(f.topicPh || 'Heading, like Timely Charting') + '" value="' + esc(x.h) + '" oninput="doc[\'' + f.k + '\'][' + i + '].h=this.value">' +
+        '<textarea class="inp" placeholder="' + esc(f.bodyPh || 'What was said and what is expected. "- " for bullets') + '" oninput="doc[\'' + f.k + '\'][' + i + '].t=this.value">' + esc(x.t) + '</textarea></div>').join('') +
+        '<button class="add" onclick="doc[\'' + f.k + '\'].push({h:\'\',t:\'\'});renderForm($(\'main\'),true)">+ Add</button></div>';
+    }
+    case 'policies': case 'standards': {
+      const lib = LIB[f.t], sel = doc[f.k];
+      let h = '<div class="f"><label>' + esc(f.label) + '</label>' + lib.map(p => '<label class="ck"><input type="checkbox" ' + (sel.indexOf(p.id) >= 0 ? 'checked' : '') + ' onchange="toggleSel(\'' + f.k + '\',\'' + p.id + '\',this.checked)"><div><b>' + esc(p.title) + '</b><em>' + esc(p.quote) + '</em></div></label>').join('');
+      if (f.t === 'policies') h += doc.extraPolicies.map((p, i) => '<label class="ck"><input type="checkbox" ' + (p.on ? 'checked' : '') + ' onchange="doc.extraPolicies[' + i + '].on=this.checked"><div><b>' + esc(p.title) + ' <span class="pill" style="background:#e8f1e8;color:#2E6B2E">from search</span></b><em>' + esc(p.quote) + '</em></div></label>').join('');
+      return h + '</div>';
+    }
+    case 'find': return '<div class="f">' + findHtml(f.forSog) + '</div>';
+    case 'planauto': return '<div class="auto" id="planauto">' + planAutoText() + '</div>';
+  }
+  return '';
+}
+function toggleSel(k, id, on) { const a = doc[k]; const i = a.indexOf(id); if (on && i < 0) a.push(id); if (!on && i >= 0) a.splice(i, 1); }
+function planDays() { return Math.max(1, parseInt(doc.days, 10) || 90); }
+function planChecks() { return String(doc.checks || '').split(/[,\s]+/).map(x => parseInt(x, 10)).filter(x => x > 0); }
+function planAutoText() { const end = addDays(doc.start, planDays() - 1); return 'Ends <b>' + esc(isoToUS(end)) + '</b>. Check ins: ' + planChecks().map(n => '<b>' + n + ' days</b> (week of ' + esc(weekOf(addDays(doc.start, n))) + ')').join(', ') + '. Filled in for you.'; }
+
+function renderForm(m, keepScroll) {
+  const y = window.scrollY, T = TYPES[doc.type], sts = steps(), isReview = step >= sts.length;
+  let h = '<div class="hello"><h2>' + T.icon + ' ' + esc(T.name) + '</h2><span>' + (isReview ? 'Last step: review and make the file' : 'Step ' + (step + 1) + ' of ' + (sts.length + 1) + ': ' + esc(sts[step].title)) + ' &nbsp;<span class="pill conf">CONFIDENTIAL</span></span></div>';
+  h += '<div class="steps">' + sts.concat([0]).map((_, i) => '<i class="' + (i <= step ? 'on' : '') + '"></i>').join('') + '</div>';
+  if (!isReview) {
+    h += '<div class="card">' + sts[step].fields.map(fieldHtml).join('') + '</div>';
+    h += '<div class="bar"><button class="btn ghost" onclick="' + (step ? 'step--;renderForm($(\'main\'))' : 'go(\'home\')') + '">' + (step ? 'Back' : 'Cancel') + '</button><button class="btn" onclick="nextStep()">' + (step === sts.length - 1 ? 'Review' : 'Next') + '</button></div>';
+  } else h += reviewHtml();
+  m.innerHTML = h;
+  if (keepScroll) window.scrollTo(0, y); else window.scrollTo(0, 0);
+}
+function nextStep() {
+  if (step === 0 && doc.type !== 'sog' && !String(doc.employee).trim()) { toast('Put in the employee name first.', true); return; }
+  if (step === 0 && doc.type === 'sog' && !String(doc.title || '').trim()) { toast('Give the SOG a title first.', true); return; }
+  step++; renderForm($('main'));
+}
+
+/* ---------------- review (built in checks, no AI) ---------------- */
+function textOf(d) { return JSON.stringify(d); }
+function checks() {
+  const d = doc, out = [];
+  const ok = t => out.push(['ok', t]), warn = t => out.push(['warn', t]), bad = t => out.push(['bad', t]);
+  const blank = a => !a || !a.length || a.every(x => !String(Array.isArray(x) ? x.join('') : (typeof x === 'object' ? Object.values(x).join('') : x)).trim());
+  const strs = []; (function walk(o, k) { if (typeof o === 'string') { if (!/^_auto_/.test(k || '')) strs.push(o); } else if (o && typeof o === 'object') Object.keys(o).forEach(kk => walk(o[kk], Array.isArray(o) ? k : kk)); })(d, '');
+  const ph = strs.join('\n').match(/\[[^\]\n]{2,60}\]/g);
+  if (ph && !(d.type === 'sog' && ph.every(p => p === '[TBD]'))) bad('Still has placeholders to fill in: ' + [...new Set(ph)].slice(0, 4).join(', '));
+  else if (ph) warn('Some header fields still say [TBD]. Fine for a draft.');
+  if (d.type === 'sog') {
+    d.purpose ? ok('Purpose filled in.') : bad('1.0 Purpose is empty.');
+    d.scope ? ok('Scope filled in.') : warn('2.0 Scope is empty. Say what it covers and what it does not.');
+    blank(d.sections) ? warn('No topic sections yet (3.0 on).') : ok(d.sections.length + ' topic section(s).');
+    blank(d.refs) ? warn('No references. Every rule that comes from policy or the CBA should be cited.') : ok(d.refs.length + ' reference(s).');
+    if (/[\u2014\u2013]/.test(textOf(d))) warn('There is a long dash in the text. The SOG style says rewrite without dashes.');
+    return out;
+  }
+  d.employee ? ok('Employee: ' + d.employee + (d.position ? ', ' + d.position : '')) : bad('No employee name.');
+  if (d.type !== 'quick' && !d.position) warn('No position for the employee (it goes on the TO line and the signature line).');
+  if (d.type === 'quick') { d.note || d.title ? ok('Note has text.') : bad('The note is empty.'); return out; }
+  if (d.type === 'coach') { blank(d.topics) ? bad('No topics yet.') : ok(d.topics.length + ' topic(s).'); return out; }
+  if (d.type === 'verbal' || d.type === 'written') {
+    blank(d.concerns) ? bad('No concerns listed.') : ok(d.concerns.length + ' concern(s).');
+    const noDate = d.concerns.filter(c => c && !/\d{1,2}\/\d{1,2}|\d{4}|january|february|march|april|may|june|july|august|september|october|november|december/i.test(c));
+    if (noDate.length) warn(noDate.length + ' concern(s) have no date. Dates make the record stronger.');
+    (d.policies.length || d.extraPolicies.some(p => p.on)) ? ok('Policy cited.') : bad('No violated policy checked.');
+    blank(d.expect) ? bad('No expectations listed.') : (d.expect.some(e => e.what && !e.when) ? warn('Some expectations have no deadline.') : ok('Every expectation has a deadline.'));
+    if (blank(d.timeline)) warn('No prior steps listed. If there was earlier coaching or reminders, add them.');
+  }
+  if (d.type === 'cap') {
+    const det = d.mode === 'Detailed';
+    if (det) {
+      d.background || !blank(d.findings) ? ok('Problem described (background and findings).') : bad('Policy 1053.5: list the deficiencies (background or findings).');
+      blank(d.actions) ? bad('Policy 1053.5: no corrective actions (goals and objectives).') : ok(d.actions.length + ' corrective action(s).');
+      d.actions.some(a => a.what && (!a.when || !a.measure)) ? warn('Some actions are missing a deadline or a measure of success.') : null;
+    } else {
+      d.wrong ? ok('What went wrong is filled in.') : bad('Policy 1053.5: describe the problem (What went wrong).');
+      blank(d.youDo) ? bad('Policy 1053.5: no action steps for the employee.') : ok(d.youDo.length + ' action step(s).');
+      blank(d.checkins) ? warn('No check ins listed. 1053.5 asks for monitoring and how often.') : ok('Check ins listed.');
+    }
+    planChecks().length ? ok('Monitoring timeline: ' + planChecks().join(', ') + ' days.') : bad('Policy 1053.5: no check in schedule.');
+    d.consequence ? ok('Consequences stated.') : bad('Policy 1053.5: state what happens if the plan is not met.');
+    ok('Fire Chief approval line is on the signature block (1053.5: the Chief approves every CAP before it starts).');
+    warn('Reminder: 1053.5 prefers the CAP at the time of discipline, and no later than 7 calendar days after.');
+  }
+  return out;
+}
+function reviewHtml() {
+  const T = TYPES[doc.type], isQuick = doc.type === 'quick', isSog = doc.type === 'sog';
+  let h = '<div class="card"><h3>Review</h3><ul class="check-list">' + checks().map(c => '<li class="' + c[0] + '">' + (c[0] === 'ok' ? '&#10003;' : c[0] === 'warn' ? '!' : '&#10007;') + ' <span>' + esc(c[1]) + '</span></li>').join('') + '</ul>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start"><button class="btn ghost small" onclick="copyForClaude()">Copy for Claude</button><div><button class="ai-btn" style="padding:7px 11px;font-size:12px" onclick="aiAssist()">&#10024; AI review</button><div class="ai-note">Not connected to AI yet</div></div></div></div>';
+  h += '<div class="card"><h3>Preview</h3><div class="preview">' + previewHtml() + '</div></div>';
+  h += '<div class="card">' + (isSog
+      ? '<label class="ck"><input type="checkbox" ' + (doc.save ? 'checked' : '') + ' onchange="doc.save=this.checked"><div><b>Also save to ' + esc(CONFIG.sogFolder) + ' on the CG Staff site</b></div></label>'
+      : (canPersonnel() ? '<label class="ck"><input type="checkbox" ' + (doc.save ? 'checked' : '') + ' onchange="doc.save=this.checked"><div><b>File it in ' + esc(doc.employee || 'the employee') + '\'s personnel folder</b><em>' + esc(CONFIG.personnelFolder + '/' + folderName(doc.employee || 'First Last')) + '</em></div></label>' : '<div class="note">Your account does not file into personnel folders. Download the file and give it to a chief.</div>')) +
+    (doc.type === 'coach' ? '<button class="btn ghost small" onclick="copyEmail()">Copy as email</button>' : '') + '</div>';
+  h += '<div class="bar"><button class="btn ghost" onclick="step--;renderForm($(\'main\'))">Back</button>' +
+    (isQuick ? '<button class="btn" onclick="saveQuick(this)">Save note</button>' : '<button class="btn" onclick="makeWord(this)">Make Word file</button>') + '</div>';
+  return h;
+}
+
+/* =====================================================================
+   Document model: one list of blocks used for the preview, the plain
+   text copy, and the Word file.
+   ===================================================================== */
+function paras(text) {
+  const out = []; let bul = [];
+  const flush = () => { if (bul.length) { out.push({ t: 'bul', items: bul }); bul = []; } };
+  String(text || '').replace(/\r/g, '').split('\n').forEach(line => {
+    const b = /^\s*[-*\u2022]\s+(.*)$/.exec(line);
+    if (b) bul.push(b[1]);
+    else if (line.trim()) { flush(); out.push({ t: 'p', text: line.trim() }); }
+    else flush();
+  });
+  flush(); return out;
+}
+function clean(a) { return (a || []).filter(x => String(Array.isArray(x) ? x.join('') : (typeof x === 'object' ? Object.values(x).join('') : x)).trim()); }
+function empLine() { return doc.employee + (doc.position ? ', ' + doc.position : ''); }
+function fromLine() { return doc.fromName + (doc.fromTitle ? ', ' + doc.fromTitle : ''); }
+function selectedPolicies(k) { return (doc[k] || []).map(libItem).filter(Boolean).concat(k === 'policies' ? doc.extraPolicies.filter(p => p.on) : []); }
+function sigBlock(extraChief) {
+  const lines = [{ name: empLine() }, { name: fromLine() }];
+  if (extraChief) lines.push({ name: CONFIG.chief[0] + ', ' + CONFIG.chief[1] + (doc.type === 'cap' ? ', Approval Prior to Implementation' : '') });
+  return { t: 'sig', lines };
+}
+function blocks() {
+  const d = doc, B = [];
+  const H = t => B.push({ t: 'h', text: t });
+  const P = t => paras(t).forEach(b => B.push(b));
+  if (d.type === 'sog') return sogBlocks();
+  B.push({ t: 'memo', rows: [['TO:', empLine()], ['FROM:', fromLine()], ['DATE:', isoToUS(d.date)], ['SUBJECT:', d.subject || TYPES[d.type].name]] });
+  if (d.type === 'coach') {
+    P(d.intro);
+    clean(d.topics).forEach(tp => { B.push({ t: 'h2', text: tp.h }); P(tp.t); });
+    const tasks = clean(d.tasks); if (tasks.length) { H('Follow up:'); B.push({ t: 'bul', items: tasks.map(x => x.what + (x.when ? '. Due ' + x.when + '.' : '')) }); }
+    P(d.closing);
+    if (d.sigLines) B.push(sigBlock(false));
+    return B;
+  }
+  if (d.type === 'verbal' || d.type === 'written') {
+    P(d.opening);
+    if (clean(d.concerns).length) { H('Summary of Concerns:'); P(d.concernsIntro); B.push({ t: 'bul', items: clean(d.concerns) }); }
+    if (clean(d.pattern).length) { H('Pattern of Behavior:'); B.push({ t: 'bul', items: clean(d.pattern) }); }
+    const tl = clean(d.timeline); if (tl.length) { H('Prior Steps:'); tl.forEach(x => B.push({ t: 'p', text: 'On ' + (/^\d{4}-/.test(x[0]) ? isoToUS(x[0]) : x[0]) + ', ' + x[1].replace(/^([A-Z])(?=[a-z])/, c => c.toLowerCase()) })); }
+    if (d.details) { H('Additional Details:'); P(d.details); }
+    const st = selectedPolicies('standards'); if (st.length) { H('Standards:'); st.forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
+    const po = selectedPolicies('policies'); if (po.length) { H('Violated Policies:'); po.forEach(s => { B.push({ t: 'bul', items: [s.title], bold: true }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
+    const ex = clean(d.expect); if (ex.length) { H('You are expected to immediately:'); B.push({ t: 'bul', items: ex.map(x => x.what + (x.when ? ' (' + x.when + ')' : '')) }); }
+    if (d.notice) { H('Progressive Discipline Notice:'); P(d.notice); }
+    P(d.closing);
+    B.push(sigBlock(d.chiefLine));
+    return B;
+  }
+  if (d.type === 'cap') {
+    const det = d.mode === 'Detailed', end = addDays(d.start, planDays() - 1), cks = planChecks();
+    P(d.opening);
+    if (det) {
+      H('Plan Period:');
+      B.push({ t: 'p', text: 'This CAP is effective ' + isoToUS(d.start) + ' and remains in effect for ' + planDays() + ' calendar days, through ' + isoToUS(end) + '. Progress will be formally reviewed at ' + cks.join(', ').replace(/, (\d+)$/, ', and $1') + ' days. The CAP will not close until every requirement below is met, and the underlying standards remain permanent expectations of your position after the CAP closes.' });
+      if (d.background || clean(d.prior).length) { H('Background:'); P(d.background); const pr = clean(d.prior); if (pr.length) B.push({ t: 'table', head: ['Requirement (prior step)', 'Status'], rows: pr.map(x => [x.what, x.status]), widths: [78, 22] }); }
+      if (clean(d.findings).length) { H('Findings:'); clean(d.findings).forEach(f => { B.push({ t: 'h2', text: f.h }); P(f.t); }); }
+      const st = selectedPolicies('standards'), po = selectedPolicies('policies');
+      if (st.length || po.length) { H('Applicable Standards:'); st.concat(po).forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
+      const ac = clean(d.actions); if (ac.length) { H('Corrective Actions and Timelines:'); B.push({ t: 'p', text: 'You are responsible for meeting and tracking each requirement below.' }); B.push({ t: 'table', head: ['#', 'Requirement', 'Deadline', 'Measure of Success'], rows: ac.map((x, i) => [String(i + 1), x.what, x.when, x.measure]), widths: [6, 44, 22, 28] }); }
+      if (cks.length) { H('Review Schedule:'); B.push({ t: 'bul', items: cks.map((n, i) => n + '-day review' + (i === cks.length - 1 ? ' and CAP close-out' : '') + ': week of ' + weekOf(addDays(d.start, n)) + '/' + addDays(d.start, n).slice(0, 4)) }); if (d.reviewers) B.push({ t: 'p', text: 'Reviews will be conducted by ' + d.reviewers + '.' }); }
+      if (clean(d.support).length) { H('Agency Support:'); B.push({ t: 'bul', items: clean(d.support) }); }
+      H('Expectations and Consequences:'); P(d.consequence);
+    } else {
+      if (d.wrong) { H('What went wrong:'); P(d.wrong); }
+      if (clean(d.fixing).length) { H('What this plan is fixing:'); B.push({ t: 'bul', items: clean(d.fixing) }); }
+      if (clean(d.youDo).length) { H('What you need to do:'); B.push({ t: 'bul', items: clean(d.youDo).map(x => (x[0] ? x[0].replace(/\.?$/, '. ') : '') + x[1]), leadBold: true }); }
+      if (clean(d.districtDo).length) { H('What the District will do:'); B.push({ t: 'bul', items: clean(d.districtDo) }); }
+      const ci = clean(d.checkins);
+      H('Check-ins:');
+      if (ci.length) B.push({ t: 'bul', items: ci.map(x => (x[0] ? x[0].replace(/\.?$/, '. ') : '') + x[1]), leadBold: true });
+      else B.push({ t: 'bul', items: cks.map((n, i) => n + ' days (week of ' + weekOf(addDays(d.start, n)) + ').' + (i === cks.length - 1 ? ' Plan closes. You will get written notice that it is no longer in effect.' : '')) });
+      H('If this does not get done:'); P(d.consequence);
+      if (d.standing) { H('A note on where this stands:'); P(d.standing); }
+      B.push({ t: 'p', text: 'This plan requires the Chief\'s approval before implementation, per Policy 1053.5.' });
+    }
+    B.push(sigBlock(true));
+    return B;
+  }
+  return B;
+}
+function sogBlocks() {
+  const d = doc, B = [];
+  B.push({ t: 'title', text: d.title || 'Untitled SOG', sub: (d.agencies || '').replace('NCEMS', 'North Country EMS') });
+  B.push({ t: 'sogtable', rows: [['Guideline #', d.num, 'Effective Date', d.effective], [(/\//.test(d.agencies || '') ? 'Division/Agencies' : 'Division'), d.division + (/\//.test(d.agencies || '') ? ' \u00b7 ' + d.agencies.split(' / ').join(' \u00b7 ') : ''), 'Revision Date', d.revision], ['Applies To', d.applies, 'Approved By', d.approved], ['Document Owner', d.owner, 'Review Cycle', d.cycle]] });
+  let n = 1;
+  const sec = (title, text) => { B.push({ t: 'h', text: (n++) + '.0 ' + title }); subParas(text, n - 1).forEach(b => B.push(b)); };
+  sec('Purpose', d.purpose); sec('Scope', d.scope);
+  clean(d.sections).forEach(s => sec(s.h, s.t));
+  const refs = clean(d.refs); if (refs.length) { B.push({ t: 'h', text: (n++) + '.0 References' }); B.push({ t: 'bul', items: refs }); }
+  clean(d.appx).forEach((a, i) => { B.push({ t: 'h', text: 'Appendix ' + String.fromCharCode(65 + i) + ', ' + a.h }); paras(a.t).forEach(b => B.push(b)); });
+  B.push({ t: 'closing', text: 'Issued by the ' + d.division + ' Division | Document Owner: ' + d.owner + ' | Approved By: ' + d.approved });
+  return B;
+}
+function subParas(text, secNum) {
+  const out = [];
+  String(text || '').split('\n').reduce((acc, line) => { const m = /^\s*(\d+\.\d+)\s+(.+)$/.exec(line); if (m) { acc.push({ h: m[1] + ' ' + m[2], t: '' }); } else { acc[acc.length - 1].t += line + '\n'; } return acc; }, [{ h: '', t: '' }])
+    .forEach(g => { if (g.h) out.push({ t: 'h2', text: g.h }); paras(g.t).forEach(b => out.push(b)); });
+  return out;
+}
+
+/* ---------------- preview + plain text ---------------- */
+function previewHtml() {
+  if (doc.type === 'quick') return '<b>' + esc(doc.kind) + ': ' + esc(doc.title || '') + '</b><br>' + esc(doc.employee) + ' · ' + esc(isoToUS(doc.date)) + '<br><br><div style="white-space:pre-wrap">' + esc(doc.note || '') + '</div><br><i>By ' + esc(fromLine()) + '</i>';
+  return blocks().map(b => {
+    switch (b.t) {
+      case 'memo': return '<div class="memo">' + b.rows.map(r => '<div><b class="k">' + r[0] + '</b>' + (r[0] === 'SUBJECT:' ? '<b>' + esc(r[1]) + '</b>' : esc(r[1])) + '</div>').join('') + '</div><br>';
+      case 'title': return '<h3 style="margin:0">' + esc(b.text) + '</h3><div>' + esc(b.sub) + '</div>';
+      case 'sogtable': return '<table>' + b.rows.map(r => '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td><th>' + esc(r[2]) + '</th><td>' + esc(r[3]) + '</td></tr>').join('') + '</table>';
+      case 'h': return '<h4>' + esc(b.text) + '</h4>';
+      case 'h2': return '<div style="font-weight:700;margin-top:8px">' + esc(b.text) + '</div>';
+      case 'pb': return '<div style="font-weight:700;margin-top:6px">' + esc(b.text) + '</div>';
+      case 'p': return '<p style="margin:4px 0' + (b.indent ? ';padding-left:22px' : '') + '">' + esc(b.text) + '</p>';
+      case 'bul': return '<ul>' + b.items.map(x => '<li>' + (b.bold ? '<b>' + esc(x) + '</b>' : esc(x)) + '</li>').join('') + '</ul>';
+      case 'table': return '<table><tr>' + b.head.map(x => '<th>' + esc(x) + '</th>').join('') + '</tr>' + b.rows.map(r => '<tr>' + r.map(x => '<td>' + esc(x) + '</td>').join('') + '</tr>').join('') + '</table>';
+      case 'sig': return '<br>' + b.lines.map(l => '<div style="display:flex;gap:10px;margin-top:18px"><div style="flex:3;border-top:1px solid #333;font-size:10px">(Print Name)</div><div style="flex:4;border-top:1px solid #333;font-size:10px">(Signature)</div><div style="flex:2;border-top:1px solid #333;font-size:10px">(Date)</div></div><b>' + esc(l.name) + '</b>').join('');
+      case 'closing': return '<p style="text-align:center;font-size:10px;margin-top:16px">' + esc(b.text) + '</p>';
+    }
+    return '';
+  }).join('');
+}
+function plainText() {
+  if (doc.type === 'quick') return doc.kind + ': ' + (doc.title || '') + '\n' + doc.employee + ', ' + isoToUS(doc.date) + '\n\n' + (doc.note || '') + '\n\nBy ' + fromLine();
+  return blocks().map(b => {
+    switch (b.t) {
+      case 'memo': return b.rows.map(r => r[0] + ' ' + r[1]).join('\n') + '\n';
+      case 'title': return b.text + '\n' + b.sub + '\n';
+      case 'sogtable': return b.rows.map(r => r[0] + ': ' + r[1] + '   ' + r[2] + ': ' + r[3]).join('\n') + '\n';
+      case 'h': return '\n' + b.text;
+      case 'h2': case 'pb': return b.text;
+      case 'p': return (b.indent ? '    ' : '') + b.text;
+      case 'bul': return b.items.map(x => '  * ' + x).join('\n');
+      case 'table': return [b.head].concat(b.rows).map(r => r.join(' | ')).join('\n');
+      case 'sig': return '\n' + b.lines.map(l => '______________ ______________ ________\n(Print Name) (Signature) (Date)\n' + l.name).join('\n\n');
+      case 'closing': return '\n' + b.text;
+    }
+    return '';
+  }).join('\n');
+}
+async function copyText(t, msg) {
+  try { await navigator.clipboard.writeText(t); toast(msg); }
+  catch (e) { openOv('<h2>Copy this</h2><textarea class="inp" style="min-height:300px">' + esc(t) + '</textarea><br><br><button class="btn" onclick="closeOv()">Close</button>'); }
+}
+function copyForClaude() {
+  const kind = TYPES[doc.type].name;
+  const prompt = doc.type === 'sog'
+    ? 'Review this draft NCEMS / Clark Fire 13 Standard Operating Guideline. Check it against the NCEMS Policy Manual and the IAFF Local 452 CBA: flag any conflict, any rule that should cite a policy or CBA article, unclear wording a line provider could misread, and anything missing from Purpose, Scope, Roles, Procedures or References. Plain language, no dashes. Suggest specific edits.'
+    : 'Review this NCEMS ' + kind + ' before I deliver it. Check: facts and dates are specific; the policies cited fit the conduct (NCEMS / Clark Fire 13 Policy Manual, Policy 1053 Discipline); expectations are clear and measurable with deadlines; tone is firm, fair and professional; nothing reads as personal or emotional; ' + (doc.type === 'cap' ? 'it has the parts Policy 1053.5 requires (deficiencies, goals, monitoring, timeline, consequences); ' : '') + 'and anything a union rep or HR would push back on. Suggest specific edits.';
+  copyText(prompt + '\n\n---\n\n' + plainText(), 'Copied. Paste it into Claude.');
+}
+function copyEmail() {
+  const body = blocks().filter(b => b.t !== 'memo' && b.t !== 'sig').map(b => b.t === 'bul' ? b.items.map(x => '  * ' + x).join('\n') : b.text).join('\n\n');
+  copyText((doc.employee.split(' ')[0] || '') + ',\n\n' + body + '\n\n' + doc.fromName + '\n' + doc.fromTitle, 'Email text copied.');
+}
+
+/* =====================================================================
+   Word file. base-memo.docx is the agency letterhead (from the 8/2025
+   write up) with an empty body; base-sog.docx is a plain page with 1 inch
+   margins. We drop WordprocessingML in place of {{BODY}}.
+   ===================================================================== */
+function x(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function wr(text, o) {
+  o = o || {}; const f = o.font || FONT;
+  return '<w:r><w:rPr><w:rFonts w:ascii="' + f + '" w:hAnsi="' + f + '" w:cs="' + f + '"/>' + (o.b ? '<w:b/><w:bCs/>' : '') + (o.i ? '<w:i/>' : '') + (o.sz ? '<w:sz w:val="' + o.sz + '"/><w:szCs w:val="' + o.sz + '"/>' : '') + '</w:rPr>' +
+    (o.tab ? '<w:tab/>' : '') + '<w:t xml:space="preserve">' + x(text) + '</w:t></w:r>';
+}
+let FONT = 'Calibri Light';
+function wp(runs, o) {
+  o = o || {};
+  let ppr = '';
+  if (o.num) ppr += '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>';
+  if (o.keep) ppr += '<w:keepNext/>';
+  if (o.tabs) ppr += '<w:tabs><w:tab w:val="left" w:pos="' + o.tabs + '"/></w:tabs>';
+  ppr += '<w:spacing w:before="' + (o.before || 0) + '" w:after="' + (o.after == null ? 120 : o.after) + '"' + (o.line ? ' w:line="' + o.line + '" w:lineRule="auto"' : '') + '/>';
+  if (o.ind) ppr += '<w:ind w:left="' + o.ind + '"/>';
+  if (o.center) ppr += '<w:jc w:val="center"/>';
+  return '<w:p><w:pPr>' + ppr + '</w:pPr>' + runs + '</w:p>';
+}
+function wtable(rows, widths, o) {
+  o = o || {}; const tw = o.total || 8640;
+  const ws = widths.map(p => Math.round(tw * p / 100));
+  const border = o.noBorder ? '<w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders>'
+    : '<w:tblBorders><w:top w:val="single" w:sz="4" w:color="999999"/><w:left w:val="single" w:sz="4" w:color="999999"/><w:bottom w:val="single" w:sz="4" w:color="999999"/><w:right w:val="single" w:sz="4" w:color="999999"/><w:insideH w:val="single" w:sz="4" w:color="999999"/><w:insideV w:val="single" w:sz="4" w:color="999999"/></w:tblBorders>';
+  let t = '<w:tbl><w:tblPr><w:tblW w:w="' + tw + '" w:type="dxa"/>' + border + '<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' + ws.map(w => '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>';
+  rows.forEach((r, ri) => {
+    t += '<w:tr><w:trPr><w:cantSplit/>' + (o.rowH && o.rowH[ri] ? '<w:trHeight w:val="' + o.rowH[ri] + '"/>' : '') + (ri === 0 && o.header ? '<w:tblHeader/>' : '') + '</w:trPr>';
+    r.forEach((c, ci) => {
+      const shade = (o.header && ri === 0) || (o.labelCols && o.labelCols.indexOf(ci) >= 0);
+      const cellBorder = o.cellBorder ? o.cellBorder(ri, ci) : '';
+      t += '<w:tc><w:tcPr><w:tcW w:w="' + ws[ci] + '" w:type="dxa"/>' + cellBorder + (shade ? '<w:shd w:val="clear" w:color="auto" w:fill="E7E9E7"/>' : '') + '</w:tcPr>' +
+        String(c == null ? '' : c).split('\n').map(line => wp(wr(line, { b: shade, sz: o.sz }), { after: 40, keep: o.keep })).join('') + '</w:tc>';
+    });
+    t += '</w:tr>';
+  });
+  return t + '</w:tbl>';
+}
+function bodyXml(B) {
+  return B.map(b => {
+    switch (b.t) {
+      case 'memo': return b.rows.map(r => wp(wr(r[0], { sz: 28 }) + wr(r[1], { sz: 28, tab: true, b: r[0] === 'SUBJECT:' }), { line: 360, after: 0, tabs: 1440 })).join('') + wp('', { after: 120 });
+      case 'title': return wp(wr(b.text, { b: true, sz: 36 }), { after: 40 }) + wp(wr(b.sub, { sz: 22 }), { after: 200 });
+      case 'sogtable': return wtable(b.rows, [20, 30, 20, 30], { labelCols: [0, 2], sz: 20, total: 9360 }) + wp('', { after: 120 });
+      case 'h': return wp(wr(b.text, { b: true, sz: 28 }), { before: 200, after: 60, keep: true });
+      case 'h2': return wp(wr(b.text, { b: true }), { before: 120, after: 40, keep: true });
+      case 'pb': return wp(wr(b.text, { b: true }), { before: 80, after: 20, keep: true });
+      case 'p': return wp(wr(b.text), { ind: b.indent ? 720 : 0 });
+      case 'bul': return b.items.map(it => {
+        const m = b.leadBold ? /^([^.]{1,40}\.)\s(.*)$/.exec(it) : null;
+        return wp(m ? wr(m[1] + ' ', { b: true }) + wr(m[2]) : wr(it, { b: b.bold }), { num: true, after: 60 });
+      }).join('');
+      case 'table': return wtable([b.head].concat(b.rows), b.widths || b.head.map(() => 100 / b.head.length), { header: true, sz: 20, total: doc.type === 'sog' ? 9360 : 8640 }) + wp('', { after: 120 });
+      case 'sig': return wp('', { after: 240 }) + b.lines.map(l =>
+        wtable([['', '', ''], ['(Print Name)', '(Signature)', '(Date)']], [36, 42, 22], { noBorder: true, sz: 18, keep: true, rowH: [520, 0], cellBorder: (ri) => ri === 0 ? '<w:tcBorders><w:bottom w:val="single" w:sz="6" w:color="000000"/></w:tcBorders>' : '' }) +
+        wp(wr(l.name, { b: true }), { after: 280 })).join('');
+      case 'closing': return wp(wr(b.text, { sz: 18 }), { center: true, before: 360 });
+    }
+    return '';
+  }).join('');
+}
+async function buildDocx() {
+  const isSog = doc.type === 'sog';
+  FONT = isSog ? 'Calibri' : 'Calibri Light';
+  const base = await fetch(isSog ? 'base-sog.docx' : 'base-memo.docx', { cache: 'force-cache' });
+  if (!base.ok) throw new Error('Could not load the Word template.');
+  const zip = await JSZip.loadAsync(await base.arrayBuffer());
+  let xml = await zip.file('word/document.xml').async('string');
+  xml = xml.replace(/<w:p><w:r><w:t>\{\{BODY\}\}<\/w:t><\/w:r><\/w:p>/, bodyXml(blocks()));
+  zip.file('word/document.xml', xml);
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+}
+function folderName(n) { const p = String(n || '').trim().replace(/\s+/g, ' ').replace(/[\\/:*?"<>|#%]/g, '').split(' '); if (p.length < 2) return p[0] || 'Unknown'; const last = p.pop(); return last + ', ' + p.join(' '); }
+function fileBase() {
+  if (doc.type === 'sog') return 'NCEMS ' + (doc.title || 'Untitled').replace(/[\\/:*?"<>|#%]/g, '') + ' SOG ' + (doc.revision || 'Draft v1');
+  return doc.date + ' ' + TYPES[doc.type].file + (doc.type === 'cap' ? ' (' + doc.mode + ')' : '') + ' - ' + String(doc.employee).replace(/[\\/:*?"<>|#%]/g, '');
+}
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+async function makeWord(btn) {
+  btn.disabled = true; const old = btn.textContent; btn.textContent = 'Making...';
+  try {
+    const blob = await buildDocx(), name = fileBase() + '.docx';
+    download(blob, name);
+    if (doc.save && !DEMO) {
+      if (doc.type === 'sog') await uploadFile(CONFIG.sogFolder, name, blob);
+      else if (canPersonnel()) { await uploadFile(CONFIG.personnelFolder + '/' + folderName(doc.employee), name, blob); personCache = null; }
+      toast('Downloaded and filed on the CG Staff site.');
+    } else toast(DEMO ? 'Downloaded (demo, not filed).' : 'Downloaded.');
+    doc._done = true;
+    $('main').insertAdjacentHTML('beforeend', '<div class="card"><b>Done.</b> ' + esc(name) + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' + (doc.type !== 'sog' && canPersonnel() ? '<button class="btn small" onclick="doc=null;go(\'person:\'+' + esc(JSON.stringify(folderName(doc.employee))).replace(/"/g, '&quot;') + ')">Open ' + esc(doc.employee) + '</button>' : '') + '<button class="btn small ghost" onclick="doc=null;go(\'home\')">Forms home</button></div></div>');
+  } catch (e) { toast(e.message || String(e), true); }
+  btn.disabled = false; btn.textContent = old;
+}
+async function saveQuick(btn) {
+  btn.disabled = true;
+  try {
+    const txt = 'QUICK NOTE (' + doc.kind + ')\nEmployee: ' + doc.employee + '\nDate: ' + isoToUS(doc.date) + '\nBy: ' + fromLine() + '\nTitle: ' + (doc.title || '') + '\n\n' + (doc.note || '') + '\n';
+    const name = doc.date + ' Quick Note (' + doc.kind + ') - ' + (doc.title || '').replace(/[\\/:*?"<>|#%]/g, '').slice(0, 60) + '.txt';
+    if (DEMO) { DEMO_FILES.push({ person: folderName(doc.employee), name, text: txt }); toast('Saved (demo).'); }
+    else if (canPersonnel()) { await uploadFile(CONFIG.personnelFolder + '/' + folderName(doc.employee), name, new Blob([txt], { type: 'text/plain' })); toast('Quick note filed.'); }
+    else { download(new Blob([txt], { type: 'text/plain' }), name); toast('Downloaded. Give it to a chief to file.'); }
+    const who = folderName(doc.employee); personCache = null; doc = null;
+    canPersonnel() ? go('person:' + who) : go('home');
+  } catch (e) { toast(e.message || String(e), true); btn.disabled = false; }
+}
+
+/* ---------------- search + person ---------------- */
+let searchQ = '';
+async function loadPeople() {
+  if (personCache) return personCache;
+  if (DEMO) { personCache = DEMO_PEOPLE.map(n => ({ name: n, display: displayName(n) })); return personCache; }
+  const kids = await listFolder(CONFIG.personnelFolder);
+  personCache = kids.filter(k => k.folder).map(k => ({ name: k.name, display: displayName(k.name), id: k.id, count: k.folder.childCount, webUrl: k.webUrl })).sort((a, b) => a.name.localeCompare(b.name));
+  return personCache;
+}
+function displayName(folder) { const m = /^([^,]+),\s*(.+)$/.exec(folder); return m ? m[2] + ' ' + m[1] : folder; }
+function initialsOf(n) { return displayName(n).split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(); }
+async function renderSearch(m) {
+  if (!canPersonnel()) { m.innerHTML = '<div class="note">Personnel search is for the chiefs. Your account can still make write ups and SOG drafts.</div>'; return; }
+  m.innerHTML = '<div class="hello"><h2>Search</h2><span>Employees, and words inside filed documents</span></div>' +
+    '<div class="search-big"><input class="inp" id="sq" placeholder="Name, or a word like PEAC" value="' + esc(searchQ) + '" onkeydown="if(event.key===\'Enter\')doSearch()"><button class="btn" onclick="doSearch()">Search</button></div><div id="sres"><div class="msg">Loading employees...</div></div>';
+  try { await loadPeople(); } catch (e) { $('sres').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; return; }
+  doSearch();
+}
+async function doSearch() {
+  searchQ = ($('sq') || {}).value || ''; const q = searchQ.trim().toLowerCase(), el = $('sres');
+  const ppl = (personCache || []).filter(p => !q || p.name.toLowerCase().includes(q) || p.display.toLowerCase().includes(q));
+  let h = '<div class="lbl">Employees' + (q ? ' matching "' + esc(searchQ) + '"' : '') + ' (' + ppl.length + ')</div><div class="plist">' +
+    (ppl.length ? ppl.map(p => '<div class="p" onclick="go(\'person:\'+' + esc(JSON.stringify(p.name)).replace(/"/g, '&quot;') + ')"><div class="avatar" style="width:36px;height:36px;font-size:13px">' + esc(initialsOf(p.name)) + '</div><div style="flex:1"><b>' + esc(p.display) + '</b>' + (p.count != null ? '<div style="font-size:11px;color:var(--muted)">' + p.count + ' item' + (p.count === 1 ? '' : 's') + '</div>' : '') + '</div><span>&#8250;</span></div>').join('') : '<div class="msg">No employee folder by that name yet. A folder is made the first time something is filed for them.</div>') + '</div>';
+  if (q.length >= 3 && !DEMO) h += '<div class="lbl">Inside documents</div><div id="sdocs"><div class="msg">Searching...</div></div>';
+  el.innerHTML = h;
+  if (q.length >= 3 && !DEMO) {
+    try {
+      const d = await getDrive();
+      const j = await graph('/drives/' + d + '/root:/' + encPath(CONFIG.personnelFolder) + ':/search(q=\'' + encodeURIComponent(searchQ.replace(/'/g, "''")) + '\')?$top=50&$select=id,name,webUrl,parentReference,file');
+      const files = (j.value || []).filter(f => f.file);
+      $('sdocs').innerHTML = files.length ? files.map(f => { const who = ((f.parentReference || {}).path || '').split('/').pop(); return docRow(f, decodeURIComponent(who)); }).join('') : '<div class="msg">No documents contain that.</div>';
+    } catch (e) { $('sdocs').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }
+  }
+}
+function parseFileName(name) {
+  const m = /^(\d{4}-\d{2}-\d{2})\s+(.+?)(?:\s+-\s+.*)?\.(\w+)$/.exec(name);
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  let type = 'other', label = name.replace(/\.\w+$/, '');
+  if (m) { label = m[2]; }
+  for (const k of Object.keys(TYPES)) if (k !== 'other' && new RegExp(TYPES[k].file, 'i').test(name)) { type = k; break; }
+  if (/reprimand/i.test(name) && !/verbal/i.test(name)) type = 'written';
+  if (/verbal/i.test(name)) type = 'verbal';
+  if (/\bcap\b|corrective/i.test(name)) type = 'cap';
+  if (/coach/i.test(name)) type = 'coach';
+  return { date: m ? m[1] : '', label, type, ext };
+}
+function docRow(f, who) {
+  const p = parseFileName(f.name), T = TYPES[p.type];
+  return '<div class="doc"><div class="dt">' + esc(p.date ? isoToUS(p.date) : '') + '</div><div class="bd"><span class="tchip" style="background:' + T.color + '">' + esc(T.name) + '</span><b>' + esc(p.label) + '</b>' + (who ? '<div style="font-size:11px;color:var(--muted);margin-top:3px">' + esc(displayName(who)) + '</div>' : '') +
+    (f._text != null ? '<p>' + esc(f._text.replace(/^QUICK NOTE[^\n]*\n(?:[A-Za-z]+:[^\n]*\n)*\n?/, '')) + '</p>' : '') +
+    '<div class="acts">' + (f.webUrl ? '<a href="' + esc(f.webUrl) + '" target="_blank" rel="noopener">Open</a>' : '') + '</div></div></div>';
+}
+async function renderPerson(m, folder) {
+  m.innerHTML = '<div class="person-hd"><div class="avatar">' + esc(initialsOf(folder)) + '</div><div style="flex:1"><h2 style="margin:0;font-size:18px">' + esc(displayName(folder)) + '</h2><span style="font-size:11px;color:var(--muted)">' + esc(CONFIG.personnelFolder + '/' + folder) + '</span></div></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0"><button class="btn small" onclick="newFor(\'quick\',' + esc(JSON.stringify(displayName(folder))).replace(/"/g, '&quot;') + ')">+ Quick note</button><button class="btn small ghost" onclick="pickWriteup(' + esc(JSON.stringify(displayName(folder))).replace(/"/g, '&quot;') + ')">+ Write up</button><button class="btn small ghost" onclick="uploadOld(' + esc(JSON.stringify(folder)).replace(/"/g, '&quot;') + ')">Upload old file</button></div>' +
+    '<div id="plist"><div class="msg">Loading...</div></div>';
+  let files;
+  try {
+    files = DEMO ? DEMO_FILES.filter(f => f.person === folder).map(f => ({ name: f.name, _text: f.text, file: {} })) : (await listFolder(CONFIG.personnelFolder + '/' + folder)).filter(f => f.file);
+  } catch (e) { $('plist').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; return; }
+  files.sort((a, b) => (parseFileName(b.name).date || '').localeCompare(parseFileName(a.name).date || '') || b.name.localeCompare(a.name));
+  await Promise.all(files.filter(f => /\.txt$/i.test(f.name) && f._text == null && f.size < 20000).map(async f => { try { f._text = await readText(f); } catch (e) { f._text = ''; } }));
+  const counts = {}; files.forEach(f => { const t = parseFileName(f.name).type; counts[t] = (counts[t] || 0) + 1; });
+  $('plist').innerHTML = (files.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + Object.keys(counts).map(t => '<span class="tchip" style="background:' + TYPES[t].color + '">' + esc(TYPES[t].name) + ': ' + counts[t] + '</span>').join('') + '</div>' : '') +
+    (files.length ? files.map(f => docRow(f, '')).join('') : '<div class="msg">Nothing filed yet.</div>');
+}
+function newFor(type, name) { doc = freshDoc(type); doc.employee = name; step = 0; route = 'form'; render(); }
+function pickWriteup(name) { openOv('<h2>Write up for ' + esc(name) + '</h2><div class="tiles">' + ['coach', 'verbal', 'written', 'cap'].map(t => tile(t, "closeOv();newFor('" + t + "'," + esc(JSON.stringify(name)).replace(/"/g, '&quot;') + ")")).join('') + '</div><br><button class="btn ghost" onclick="closeOv()">Cancel</button>'); }
+function uploadOld(folder) {
+  openOv('<h2>Upload an old file</h2><p>For write ups done before this app. It gets renamed so it sorts by date.</p>' +
+    '<div class="f"><label>Kind</label><select class="inp" id="uo-type">' + ['coach', 'verbal', 'written', 'cap', 'quick', 'other'].map(k => '<option value="' + k + '">' + TYPES[k].name + '</option>').join('') + '</select></div>' +
+    '<div class="f"><label>Date of the document</label><input class="inp" type="date" id="uo-date" value="' + todayISO() + '"></div>' +
+    '<div class="f"><label>Short description (optional)</label><input class="inp" id="uo-desc" placeholder="PEAC and charting"></div>' +
+    '<div class="f"><label>File</label><input class="inp" type="file" id="uo-file"></div>' +
+    '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="closeOv()">Cancel</button><button class="btn" id="uo-go" onclick="doUploadOld(' + esc(JSON.stringify(folder)).replace(/"/g, '&quot;') + ')">Upload</button></div>');
+}
+async function doUploadOld(folder) {
+  const f = $('uo-file').files[0]; if (!f) { toast('Pick a file.', true); return; }
+  const ext = (f.name.split('.').pop() || 'docx').toLowerCase(), t = $('uo-type').value, desc = $('uo-desc').value.trim().replace(/[\\/:*?"<>|#%]/g, '');
+  const name = ($('uo-date').value || todayISO()) + ' ' + TYPES[t].file + (desc ? ' (' + desc + ')' : '') + ' - ' + displayName(folder) + '.' + ext;
+  $('uo-go').disabled = true;
+  try { if (DEMO) DEMO_FILES.push({ person: folder, name, text: null }); else await uploadFile(CONFIG.personnelFolder + '/' + folder, name, f); closeOv(); toast('Uploaded.'); personCache = null; renderPerson($('main'), folder); }
+  catch (e) { toast(e.message, true); $('uo-go').disabled = false; }
+}
+
+/* ---------------- info ---------------- */
+function openInfo() {
+  openOv('<h2>NCEMS Forms</h2><p><b>Version ' + VERSION + '</b>' + (DEMO ? ' (demo)' : '') + '<br>Signed in as ' + esc(meEmail()) + '</p>' +
+    '<p>Write ups use the agency letterhead and file into <b>' + esc(CONFIG.personnelFolder) + '</b> on the CG Staff SharePoint site. The policy search reads <b>' + esc(CONFIG.refFolder) + '</b> on the same site.</p>' +
+    '<p>Questions: Doug Boyce, <a href="mailto:d.boyce@northcountryems.org">d.boyce@northcountryems.org</a></p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn small ghost" style="text-decoration:none" href="' + CONFIG.cgUrl + '">CG Staff</a><a class="btn small ghost" style="text-decoration:none" href="' + CONFIG.hubUrl + '">NCEMS Hub</a>' + (account || DEMO ? '<button class="btn small red" onclick="signOut()">Sign out</button>' : '') + '<button class="btn small" onclick="closeOv()">Close</button></div>');
+}
+
+/* ---------------- demo data ---------------- */
+const DEMO_PEOPLE = ['Rivera, Sam', 'Lee, Jordan', 'Smith, Casey'];
+const DEMO_FILES = [
+  { person: 'Rivera, Sam', name: '2026-03-21 Documented Coaching - Sam Rivera.docx', text: null },
+  { person: 'Rivera, Sam', name: '2026-08-12 Written Verbal Reprimand - Sam Rivera.docx', text: null },
+  { person: 'Rivera, Sam', name: '2026-09-02 Quick Note (Positive) - Great cardiac arrest call.txt', text: 'QUICK NOTE (Positive)\nEmployee: Sam Rivera\nDate: 9/2/2026\nBy: Douglas Boyce, Battalion Chief\nTitle: Great cardiac arrest call\n\nRan a clean code at the school, ROSC on scene, chart done before end of shift.\n' }
+];
+const DEMO_POLICY = '# Discipline\n1053.4 PROGRESSIVE DISCIPLINE\nProgressive Discipline is a system of discipline where the penalties increase upon repeat occurrences.\n1053.5 SECTION TITLE\nCorrective Action Plan (CAP). Following any disciplinary action, all officers shall develop a Corrective Action Plan with subordinates. Immediate supervisors shall submit for approval the Corrective Action Plan to the Chief prior to implementation.\n# Standards of Conduct\n325.3 RESPONSIBILITIES\nMembers shall be familiar with and obedient to the policies.\n325.5 COMPETENT PERFORMANCE\nFailure to conform to work standards, including timely documentation of patient care reports and charts.\n# Personal Communication Devices\n702.4 USE WHILE DRIVING\nMembers shall not use a personal phone or cell device while driving an agency vehicle or ambulance.\n';
+
+/* ---------------- start ---------------- */
+function renderSignin(msg) {
+  $('main').innerHTML = '<div class="center"><div class="center-card"><div class="center-head"><img src="logo.png" alt=""><h2>FORMS</h2><p>Write ups, quick notes and SOG drafts</p></div><div class="center-body">' +
+    '<div class="only-box"><b>CG Staff only</b>This is for the CG Staff. Crew apps are on the NCEMS Hub.<a href="' + CONFIG.hubUrl + '">&larr; Back to the NCEMS Hub</a></div>' +
+    (msg ? '<div class="msg err">' + esc(msg) + '</div>' : 'CG Staff: sign in with your NCEMS Microsoft account.') +
+    '<button class="big-btn" onclick="signIn()">Sign in with Microsoft</button><div class="err-box" id="signin-err"></div><a class="small-link" href="?demo=1">Try the demo (sample data, nothing saves)</a></div></div></div>';
+}
+window.addEventListener('beforeunload', e => { if (doc && route === 'form' && !doc._done) { e.preventDefault(); e.returnValue = ''; } });
+(async function start() {
+  if (DEMO) { $('hdr-sub').textContent = 'DEMO · nothing saves'; render(); return; }
+  try { await initAuth(); } catch (e) { renderSignin(e.message); return; }
+  if (!account) { renderSignin(); return; }
+  if (!isStaff()) {
+    $('main').innerHTML = '<div class="center"><div class="center-card"><div class="center-head"><img src="logo.png" alt=""><h2>FORMS</h2></div><div class="center-body"><div class="only-box"><b>CG Staff only</b>You are signed in as ' + esc(meEmail()) + '. This is for the CG Staff. Your crew apps are on the NCEMS Hub.<a href="' + CONFIG.hubUrl + '">Open the NCEMS Hub</a></div><a class="small-link" href="#" onclick="signOut();return false">Sign out</a></div></div></div>';
+    return;
+  }
+  $('hdr-sub').textContent = signer().name + (signer().title ? ', ' + signer().title : '');
+  render();
+  if (canPersonnel()) loadPeople().catch(() => {});
+})();
+</script>
+</body>
+</html>
