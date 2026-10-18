@@ -136,7 +136,7 @@
    file in the agency's format and files it in the Personnel Files
    folder on the CG Staff SharePoint site. Search by employee.
    ===================================================================== */
-const VERSION = '1.0';
+const VERSION = '1.1';
 
 const CONFIG = {
   clientId:  '254c214f-bfe2-4ebb-9294-99815e167ab0',   // same Entra app as CG Staff and Facilities and Grounds
@@ -146,6 +146,10 @@ const CONFIG = {
   refFolder: 'Forms Reference',                        // policy-manual.md and cba.md live here
   personnelFolder: 'Personnel Files',                  // one folder per employee: "Last, First"
   sogFolder: 'SOG Drafts',
+  spDocs:      'https://northcountryemsorg.sharepoint.com/sites/BattalionChiefLocal/Shared%20Documents',
+  spPersonnel: 'https://northcountryemsorg.sharepoint.com/sites/BattalionChiefLocal/Shared%20Documents/Personnel%20Files',
+  /* positions in the bargaining unit (IAFF Local 452, CBA Article 1.1) */
+  unitPositions: ['lead paramedic', 'part-time lead paramedic', 'part time lead paramedic'],
   hubUrl:    'https://hub.northcountryems.org/',
   cgUrl:     'https://cgstaff.northcountryems.org/',
   /* who can open Forms (lower case) */
@@ -284,7 +288,18 @@ const LIB = {
     { id: 'mpd_pcep', title: 'Clark County MPD PCEP/OTEP Requirements', quote: '100% annual completion of PCEP lectures and case reviews. Skills participation is dependent on prior completion of didactic content.' }
   ]
 };
-function libItem(id) { return LIB.policies.concat(LIB.standards).find(x => x.id === id); }
+LIB.cba = [
+  { id: 'cba1', title: 'CBA Article 1.1, Recognition', quote: 'The bargaining unit is all full-time paid NCEMS Lead Paramedics and part time casual paid NCEMS Lead Paramedics, except the Chief, Deputy Chiefs, Assistant Chiefs, Division Chiefs, Battalion Chiefs, Crew 2 paramedics and Non Lead Paramedics.' },
+  { id: 'cba6', title: 'CBA Article 6, Rules and Regulations and Policies', quote: 'Rules, regulations, and policies shall be in writing and a copy given to each employee (6.1). Employees shall comply with all Rules, Regulations, and Policies of NCEMS (6.2). Check: was the employee given the policy you are citing?' },
+  { id: 'cba14', title: 'CBA Article 14, Grievance Procedure', quote: 'A grievance must be submitted in writing to the employee\'s immediate supervisor (the first level of authority outside the bargaining unit) within thirty (30) calendar days after the act. Steps II and III go to the Department and the Administrative Board; Step IV may go to an arbitrator through PERC. Timelines can be waived or extended by mutual written agreement (14.3).' },
+  { id: 'cba20', title: 'CBA Article 20, Probation', quote: 'Newly hired full time employees who do not successfully complete their probationary period may be terminated without recourse to the grievance procedure. Probation is one year; part time employees moving to full time after at least a year serve six months.' },
+  { id: 'cba5', title: 'CBA Article 5, Discrimination', quote: 'NCEMS agrees not to discriminate against any employee for that person\'s activity on behalf of, or membership in, the Union.' },
+  { id: 'cba25', title: 'CBA Article 25, Drug Policy', quote: 'Employees in this bargaining unit are governed by the terms and conditions of the NCEMS Substance Abuse Policy 1029.' },
+  { id: 'cba23', title: 'CBA Article 23, Use of Tobacco Products', quote: 'New bargaining unit members shall not use any tobacco products on duty. Violation will result in disciplinary action.' },
+  { id: 'cba24', title: 'CBA Article 24, Maximum Consecutive Work Hours', quote: 'No more than 48 hours in any 56-hour work period, with at least 8 consecutive hours off. A fatigued employee may be relieved of duty early, as determined by the supervisor.' }
+];
+function libItem(id) { return LIB.policies.concat(LIB.standards, LIB.cba).find(x => x.id === id); }
+function isUnit() { return CONFIG.unitPositions.indexOf(String(doc && doc.position || '').trim().toLowerCase()) >= 0; }
 
 /* =====================================================================
    Form definitions. Field types:
@@ -310,6 +325,7 @@ const REPRIMAND_STEPS = (kind) => [
     { t: 'person' }, { t: 'from' }, { t: 'date', k: 'date', label: 'Date' },
     { t: 'text', k: 'subject', label: 'Subject', def: kind === 'verbal' ? 'Written Verbal Reprimand' : 'Written Reprimand' } ] },
   { title: 'What happened', fields: [
+    { t: 'ideas' },
     { t: 'area', k: 'opening', label: 'Opening', def: 'This ' + (kind === 'verbal' ? 'written verbal reprimand' : 'written reprimand') + ' is issued per Policy 1053.4, Progressive Discipline, and serves as formal notice of [the performance or conduct problem] that must be corrected immediately.' },
     { t: 'area', k: 'concernsIntro', label: 'Summary of concerns, lead in line', def: 'Your current performance reflects several areas of non-compliance and failure to meet agency expectations, including:', short: true },
     { t: 'list', k: 'concerns', label: 'Summary of concerns', ph: 'One concern per line. Facts, dates, what was missed' },
@@ -318,6 +334,7 @@ const REPRIMAND_STEPS = (kind) => [
     { t: 'area', k: 'details', label: 'More details (optional)', ph: 'Anything else the record needs. Lines starting with "- " become bullets' } ] },
   { title: 'Policies and standards', fields: [
     { t: 'find' },
+    { t: 'cba' },
     { t: 'standards', k: 'standards', label: 'Standards (protocol, WAC, MPD)' },
     { t: 'policies', k: 'policies', label: 'Violated policies' } ] },
   { title: 'Expectations', fields: [
@@ -341,6 +358,7 @@ const FORMS = {
       { t: 'person' }, { t: 'from' }, { t: 'date', k: 'date', label: 'Date' },
       { t: 'text', k: 'subject', label: 'Subject', def: 'Documented Coaching: [topic]' } ] },
     { title: 'What you talked about', fields: [
+      { t: 'ideas' },
       { t: 'area', k: 'intro', label: 'Intro', def: 'This is an overview of the key points we spoke about on [date]. Feel free to add to these topics, as we intend to help guide you through the improvements that need to be made.', short: true },
       { t: 'topics', k: 'topics', label: 'Topics' },
       { t: 'rows', k: 'tasks', label: 'Follow up tasks (optional)', cols: [{ k: 'what', label: 'Task' }, { k: 'when', label: 'Due' }] },
@@ -355,6 +373,8 @@ const FORMS = {
       { t: 'text', k: 'subject', label: 'Subject', def: 'Corrective Action Plan' },
       { t: 'seg', k: 'mode', label: 'Length', opts: ['Short', 'Detailed'], def: 'Short', hint: 'Short: plain language, like a first time issue. Detailed: data, a requirements table and measures, for a pattern that has gone on a while.' } ] },
     { title: 'Opening and plan period', fields: [
+      { t: 'ideas' },
+      { t: 'cba' },
       { t: 'area', k: 'opening', label: 'Opening', defBy: d => d.mode === 'Detailed'
         ? 'This Corrective Action Plan (CAP) is issued per Policy 1053.5. It follows [prior steps and their dates]. Each deficiency described below could independently warrant further progressive discipline. In lieu of that step, the agency is placing you on this Corrective Action Plan with specific, measurable requirements and deadlines.'
         : 'This Corrective Action Plan is issued per Policy 1053.5 and accompanies the [written reprimand] of the same date. It is not additional discipline. Its purpose is to [what this plan fixes], and to make sure it does not happen again.' },
@@ -418,7 +438,7 @@ function freshDoc(type) {
     else if (f.t === 'toggle') d[f.k] = !!f.def;
     else if (f.def !== undefined) d[f.k] = f.def;
   }));
-  d.extraPolicies = [];
+  d.extraPolicies = []; d.cbaItems = []; d.ideas = '';
   applyDefBy(d, true);
   return d;
 }
@@ -432,12 +452,33 @@ function applyDefBy(d, force) {
 function steps() { return FORMS[doc.type].filter(s => !s.show || s.show(doc)); }
 
 /* ---------------- routing ---------------- */
-function go(r) {
-  if (doc && route.startsWith('form') && r !== route && !confirm('Leave this form? What you typed is not saved anywhere.')) return;
-  if (!r.startsWith('form')) doc = null;
-  route = r; window.scrollTo(0, 0); render();
+/* 1.1: every screen and every form step is its own browser history entry, so the browser back
+   button, the phone back swipe and the on screen Back button all go back one page at a time. */
+let navDepth = 0;
+function navUrl() { return location.pathname + (DEMO ? '?demo=1' : ''); }
+function pushNav(replace) {
+  if (!replace) navDepth++;
+  try { history[replace ? 'replaceState' : 'pushState']({ ncf: 1, r: route, s: step, d: navDepth }, '', navUrl()); } catch (e) {}
 }
-function startForm(type) { doc = freshDoc(type); step = 0; route = 'form'; window.scrollTo(0, 0); render(); }
+function leaveFormOk() { return !(doc && route === 'form' && !doc._done) || confirm('Leave this form? What you typed is not saved anywhere.'); }
+function go(r) {
+  if (r !== 'form' && !leaveFormOk()) return;
+  if (r !== 'form') doc = null;
+  route = r; step = 0; pushNav(); window.scrollTo(0, 0); render();
+}
+function goBack() { if (navDepth > 0) history.back(); else go('home'); }
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if (!st || !st.ncf) { route = 'home'; step = 0; doc = null; navDepth = 0; pushNav(true); render(); return; }
+  if (route === 'form' && st.r !== 'form' && doc && !doc._done) {
+    if (!confirm('Leave this form? What you typed is not saved anywhere.')) { pushNav(); return; }   // stay put
+  }
+  if (st.r === 'form' && !doc) { route = 'home'; step = 0; navDepth = st.d || 0; pushNav(true); render(); return; }
+  if (st.r !== 'form') doc = null;
+  route = st.r; step = st.s || 0; navDepth = st.d || 0;
+  closeOv(); window.scrollTo(0, 0); render();
+});
+function startForm(type) { doc = freshDoc(type); step = 0; route = 'form'; pushNav(); window.scrollTo(0, 0); render(); }
 
 function render() {
   const m = $('main');
@@ -449,10 +490,12 @@ function render() {
 
 /* ---------------- home ---------------- */
 function tile(type, onclick) { const T = TYPES[type]; return '<button class="tile" style="--c:' + T.color + '" onclick="' + (onclick || "startForm('" + type + "')") + '"><i>' + T.icon + '</i><div><b>' + T.name + '</b><em>' + T.sub + '</em></div></button>'; }
+function spLinks() { return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><a class="btn small ghost" style="text-decoration:none" href="' + CONFIG.spPersonnel + '" target="_blank" rel="noopener">&#128193; Personnel Files in SharePoint</a><a class="btn small ghost" style="text-decoration:none" href="' + CONFIG.spDocs + '" target="_blank" rel="noopener">CG Staff documents</a></div>'; }
+function backBtn() { return '<button class="btn small ghost" style="margin-bottom:10px" onclick="goBack()">&larr; Back</button>'; }
 function renderHome(m) {
   const s = signer(), now = new Date();
   m.innerHTML = '<div class="hello"><h2>' + (now.getHours() < 12 ? 'Morning' : now.getHours() < 17 ? 'Afternoon' : 'Evening') + ', ' + esc(s.name.split(' ')[0]) + '</h2><span>' + esc(s.name) + (s.title ? ', ' + esc(s.title) : '') + (DEMO ? ' · DEMO, nothing saves' : '') + '</span></div>' +
-    (canPersonnel() ? '<div class="lbl">Search an employee</div><div class="search-big"><input class="inp" id="home-q" placeholder="Name, like Komm" onkeydown="if(event.key===\'Enter\'){searchQ=this.value;go(\'search\')}"><button class="btn" onclick="searchQ=$(\'home-q\').value;go(\'search\')">Search</button></div>' : '') +
+    (canPersonnel() ? '<div class="lbl">Search an employee</div><div class="search-big"><input class="inp" id="home-q" placeholder="Name, like Langdon" onkeydown="if(event.key===\'Enter\'){searchQ=this.value;go(\'search\')}"><button class="btn" onclick="searchQ=$(\'home-q\').value;go(\'search\')">Search</button></div>' + spLinks() : '') +
     '<div class="lbl">Notes and write ups</div><div class="tiles">' + ['quick', 'coach', 'verbal', 'written', 'cap'].map(t => tile(t)).join('') + '</div>' +
     '<div class="lbl">SOG help</div><div class="tiles">' + tile('sog') + '<button class="tile" style="--c:#7a8a7a" onclick="openPolicyOnly()"><i>&#128270;</i><div><b>Find a policy</b><em>Describe the problem, see the policies that fit</em></div></button></div>' +
     '<div class="note" style="margin-top:18px">Write ups go in <b>' + esc(CONFIG.personnelFolder) + '</b> on the CG Staff SharePoint site, one folder per employee. Employees sign the printed copy by hand.</div>';
@@ -504,9 +547,9 @@ function splitSections(text, source) {
     const line = raw.replace(/\*\*/g, '').trim();
     const h = /^#{1,4}\s+(.+)$/.exec(line);
     const num = /^(?:#{1,4}\s+)?(\d{3,4}\.\d+(?:\.\d+)?)\s+(.{3,90})$/.exec(line);
-    const art = /^(?:#{1,4}\s+)?(ARTICLE\s+\d+|Article\s+\d+(?:\.\d+)?)[\s:.\u2013-]*(.{0,90})$/.exec(line);
+    const art = /^(?:#{1,4}\s+)?(ARTICLE\s+\d+|Article\s+\d+(?:\.\d+)?|EXHIBIT\s+[A-Z])[\s:.\u2013\u2014-]*(.{0,90})$/.exec(line);
     if (num && /[A-Za-z]/.test(num[2])) { push(); cur = { source, id: num[1], title: num[2].replace(/[#*]/g, '').trim(), policy: policyTitle, body: '' }; continue; }
-    if (art) { push(); cur = { source, id: art[1].replace(/article/i, 'Article'), title: (art[2] || '').trim(), policy: '', body: '' }; continue; }
+    if (art) { push(); cur = { source, id: art[1].replace(/^article/i, 'Article').replace(/^exhibit/i, 'Exhibit'), title: titleCase((art[2] || '').trim()), policy: '', body: '' }; continue; }
     if (h) { const t = h[1].replace(/[#*]/g, '').trim(); if (!/^\d/.test(t) && t.length < 80) { policyTitle = t; } push(); cur = { source, id: '', title: t, policy: policyTitle, body: '' }; continue; }
     if (cur) cur.body += raw + '\n';
   }
@@ -519,7 +562,7 @@ async function loadPolicy() {
   if (polLoading) return polLoading;
   polLoading = (async () => {
     let manual = '', cba = '';
-    if (DEMO) { manual = DEMO_POLICY; cba = ''; }
+    if (DEMO) { manual = DEMO_POLICY; cba = DEMO_CBA; }
     else {
       const ref = CONFIG.refFolder + '/';
       [manual, cba] = await Promise.all([readText(ref + 'policy-manual.md').catch(() => ''), readText(ref + 'cba.md').catch(() => '')]);
@@ -535,21 +578,22 @@ async function loadPolicy() {
 let DF = null, AVG = 1;
 function indexPolicy() { DF = new Map(); let tot = 0; pol.forEach(s => { tot += s.len; s.tokens.forEach((_, w) => DF.set(w, (DF.get(w) || 0) + 1)); }); AVG = tot / Math.max(1, pol.length); }
 function bm25(s, w) { const tf = s.tokens.get(w) || 0; if (!tf) return 0; const N = pol.length, df = DF.get(w) || 1; const idf = Math.log(1 + (N - df + .5) / (df + .5)); return idf * tf * 2.2 / (tf + 1.2 * (.25 + .75 * s.len / AVG)); }
-function searchPolicy(q) {
+function searchPolicy(q, src, max) {
   if (!DF) indexPolicy();
   const gs = qgroups(q); if (!gs.length || !pol) return [];
   const idn = (q.match(/\b\d{3,4}(\.\d+)?\b/) || [])[0];
-  return pol.map(s => {
+  return pol.filter(s => !src || s.source === src).map(s => {
     let score = 0, hits = 0;
     gs.forEach(g => { let best = 0; g.forEach((wt, w) => { best = Math.max(best, wt * bm25(s, w)); }); if (best) { hits++; score += best; } });
     score = score * Math.pow(hits / gs.length, 1.2);
     if (idn && s.id && (s.id === idn || s.id.startsWith(idn + '.'))) score += 100 - parseFloat('0.' + (s.id.split('.')[1] || '0'));
     return { s, score };
-  }).filter(x => x.score > 1).sort((a, b) => b.score - a.score).slice(0, 8).map(x => x.s);
+  }).filter(x => x.score > 1).sort((a, b) => b.score - a.score).slice(0, max || 8).map(x => x.s);
 }
 function cite(s) {
   if (s.source === 'CBA') return 'CBA ' + (s.id || '') + (s.title ? ', ' + s.title : '');
-  return 'Policy ' + (s.id || '') + ', ' + (s.policy && s.policy.toUpperCase() !== s.title.toUpperCase() ? s.policy + ': ' : '') + titleCase(s.title);
+  const t = /^section title$/i.test(s.title) ? '' : titleCase(s.title);   /* a few manual sections are literally titled "SECTION TITLE" */
+  return 'Policy ' + (s.id || '') + ', ' + (s.policy && s.policy.toUpperCase() !== s.title.toUpperCase() ? s.policy + (t ? ': ' : '') : '') + t;
 }
 function titleCase(t) { return /[a-z]/.test(t) ? t : t.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()); }
 function snippet(s, q) {
@@ -558,8 +602,10 @@ function snippet(s, q) {
   const start = Math.max(0, at - 80), txt = body.slice(start, start + 320);
   return (start > 0 ? '... ' : '') + txt + (start + 320 < body.length ? ' ...' : '');
 }
+let findSrc = 'Both';
 function findHtml(forSog) {
   return '<div class="find"><div class="f" style="margin:0"><label>Find a policy: describe the problem</label>' +
+    '<div class="seg" style="margin-bottom:6px">' + ['Both', 'Policy manual', 'CBA'].map(o => '<button type="button" class="' + (findSrc === o ? 'on' : '') + '" onclick="findSrc=\'' + o + '\';this.parentNode.querySelectorAll(\'button\').forEach(b=>b.classList.toggle(\'on\',b===this))">' + o + '</button>').join('') + '</div>' +
     '<div class="find-row"><input class="inp" id="pq" placeholder="didn\'t finish charts before end of shift" onkeydown="if(event.key===\'Enter\')runFind(' + (forSog ? 1 : 0) + ')"><button class="btn small" onclick="runFind(' + (forSog ? 1 : 0) + ')">Search</button></div>' +
     '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;align-items:flex-start"><div><button class="ai-btn" onclick="aiAssist()">&#10024; AI assist</button><div class="ai-note">Not connected to AI yet</div></div></div>' +
     '<div class="hint">Searches the whole policy manual and the CBA by meaning words (charts, PCR and documentation all match). Tap Add to put the policy in this form.</div></div><div class="res" id="pres"></div></div>';
@@ -568,14 +614,16 @@ async function runFind(forSog) {
   const q = ($('pq') || {}).value || ''; const el = $('pres'); if (!q.trim()) return;
   el.innerHTML = '<div class="msg">Loading the policy manual...</div>';
   try { await loadPolicy(); } catch (e) { el.innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; return; }
-  lastResults = searchPolicy(q);
+  lastResults = searchPolicy(q, findSrc === 'CBA' ? 'CBA' : findSrc === 'Policy manual' ? 'Policy' : '');
   if (!lastResults.length) { el.innerHTML = '<div class="msg">Nothing matched. Try other words, or a policy number like 1053.</div>'; return; }
   el.innerHTML = lastResults.map((s, i) => '<div class="r"><b>' + esc(cite(s)) + '</b><p>' + esc(snippet(s, q)) + '</p>' +
     (doc ? '<button class="btn small" onclick="addFound(' + i + ',' + (forSog ? 1 : 0) + ')">Add</button> ' : '') + '<button class="btn small ghost" onclick="showFound(' + i + ')">Read</button></div>').join('');
 }
-function showFound(i) { const s = lastResults[i]; openOv('<h2>' + esc(cite(s)) + '</h2><div style="white-space:pre-wrap;font-size:12.5px;line-height:1.5">' + esc(s.body.trim().slice(0, 6000)) + '</div><br><button class="btn" onclick="closeOv()">Close</button>'); }
-function addFound(i, forSog) {
-  const s = lastResults[i];
+let lastSugg = [];
+function pick(i, which) { return (which === 'sugg' ? lastSugg : lastResults)[i]; }
+function showFound(i, which) { const s = pick(i, which); openOv('<h2>' + esc(cite(s)) + '</h2><div style="white-space:pre-wrap;font-size:12.5px;line-height:1.5">' + esc(s.body.trim().slice(0, 6000)) + '</div><br><button class="btn" onclick="closeOv()">Close</button>'); }
+function addFound(i, forSog, which) {
+  const s = pick(i, which);
   if (forSog || doc.type === 'sog') {
     const ref = s.source === 'CBA' ? cite(s) : 'NCEMS/Clark Fire 13 Policy ' + s.id + ', ' + titleCase(s.policy && !/^\d/.test(s.policy) ? s.policy : s.title);
     doc.refs = doc.refs || []; if (doc.refs.indexOf(ref) < 0) doc.refs.push(ref);
@@ -584,6 +632,48 @@ function addFound(i, forSog) {
     if (!doc.extraPolicies.some(p => p.title === cite(s))) doc.extraPolicies.push({ title: cite(s), quote, on: true });
   }
   toast('Added ' + cite(s)); renderForm($('main'), true);
+}
+/* 1.1: suggestions from the Start here box and what has been typed so far */
+function suggestText() { const d = doc || {}; return [d.ideas, (d.concerns || []).join(' '), d.details, d.wrong, d.background, d.opening && d.opening !== d['_auto_opening'] ? d.opening : ''].filter(Boolean).join(' '); }
+/* long notes cover several problems; search each piece on its own, then merge */
+function suggestFor(q, max) {
+  const parts = String(q).split(/[.;\n?!]|,\s|\s+and\s+|\s+but\s+|\s+also\s+/i).map(x => x.trim()).filter(x => words(x).length >= 2);
+  const seen = new Set(), out = [];
+  const take = (list, n) => { let k = 0; for (const s of list) { const key = s.source + s.id + s.title; if (seen.has(key)) continue; seen.add(key); out.push(s); if (++k >= n) break; } };
+  if (parts.length < 2) take(searchPolicy(q, '', 6), 6);
+  else parts.forEach(p => take(searchPolicy(p, '', 3), 2));
+  return out.slice(0, max || 8);
+}
+let suggT = null;
+function suggestSoon() { clearTimeout(suggT); suggT = setTimeout(suggest, 450); }
+function suggest() {
+  const el = $('sugg'); if (!el || !doc) return;
+  const q = suggestText();
+  if (words(q).length < 2) { el.innerHTML = '<div class="msg">Type a few words in the box above and matching policies show up here.</div>'; return; }
+  lastSugg = suggestFor(q);
+  el.innerHTML = lastSugg.length ? lastSugg.map((s, i) => {
+    const added = doc.extraPolicies.some(p => p.title === cite(s)) || (doc.refs || []).some(r => r.indexOf(s.id) >= 0);
+    return '<div class="r"><b>' + esc(cite(s)) + '</b> <span class="pill" style="background:' + (s.source === 'CBA' ? '#fdf3dc;color:#7a5410' : '#e8f1e8;color:#2E6B2E') + '">' + (s.source === 'CBA' ? 'CBA' : 'Policy') + '</span><p>' + esc(snippet(s, q)) + '</p>' +
+      (added ? '<span class="pill" style="background:#e6f3e6;color:#1f5a1f">&#10003; Added</span> ' : '<button class="btn small" onclick="addFound(' + i + ',0,\'sugg\')">Add</button> ') + '<button class="btn small ghost" onclick="showFound(' + i + ',\'sugg\')">Read</button></div>';
+  }).join('') : '<div class="msg">No close matches yet. Add more detail, or use Find a policy on the policies page.</div>';
+}
+function readCba(id) {
+  const c = libItem(id), art = (id.match(/\d+/) || [])[0];
+  const full = pol && pol.find(s => s.source === 'CBA' && new RegExp('^Article ' + art + '$', 'i').test(s.id));
+  openOv('<h2>' + esc(c.title) + '</h2><div style="white-space:pre-wrap;font-size:12.5px;line-height:1.5">' + esc(full ? full.body.trim().replace(/\*\*/g, '').slice(0, 6000) : c.quote) + '</div><br><button class="btn" onclick="closeOv()">Close</button>');
+}
+async function exportIdeas() {
+  try { await loadPolicy(); } catch (e) {}
+  const q = suggestText(), matches = pol ? suggestFor(q, 6) : [];
+  const T = TYPES[doc.type];
+  let out = 'Help me write an NCEMS / Clark Fire 13 ' + T.name + (doc.type === 'cap' ? ' (' + doc.mode + ')' : '') + '. Draft the opening paragraph and suggest what goes in each section, using the agency memo format (TO / FROM / DATE / SUBJECT). Keep it factual, firm and fair, plain language, no dashes. Cite only the policies below, by number and title, where they fit the conduct. Tell me if a different discipline step or other policies fit better, and anything a union rep or HR would question.\n\n';
+  out += 'Employee: ' + (doc.employee || '[name]') + (doc.position ? ', ' + doc.position : '') + (isUnit() ? ' (bargaining unit member, IAFF Local 452)' : '') + '\nFrom: ' + fromLine() + '\nDate: ' + isoToUS(doc.date) + '\n\n';
+  out += 'MY NOTES AND QUESTIONS:\n' + (doc.ideas || '(none yet)') + '\n';
+  const typed = [(doc.concerns || []).filter(Boolean).map(c => '- ' + c).join('\n'), doc.details, doc.wrong].filter(Boolean).join('\n');
+  if (typed) out += '\nWHAT I HAVE IN THE FORM SO FAR:\n' + typed + '\n';
+  if (matches.length) out += '\n---\nMATCHING POLICY TEXT (from the NCEMS / Clark Fire 13 Policy Manual' + (matches.some(m => m.source === 'CBA') ? ' and the IAFF Local 452 CBA 2024 to 2026' : '') + '):\n\n' + matches.map(m => '## ' + cite(m) + '\n' + m.body.replace(/\*\*/g, '').trim().slice(0, 4000)).join('\n\n');
+  if (isUnit()) out += '\n\n---\nCBA ITEMS TO REVIEW BEFORE ISSUING DISCIPLINE (bargaining unit member):\n' + LIB.cba.map(c => '- ' + c.title + ': ' + c.quote).join('\n') + '\n- Weingarten (Policy 1053): offer a union representative for any meeting where discipline is reasonably expected.';
+  copyText(out, 'Copied. Paste it into Claude.');
 }
 function aiAssist() {
   openOv('<h2>&#10024; AI assist</h2><p><b>Not connected to AI yet.</b></p><p>When it is turned on, you will be able to describe a problem in your own words and get the best matching policies, plus a review of the whole write up for tone, missing facts and policy fit.</p><p>For now, use the regular search, or tap <b>Copy for Claude</b> on the last step and paste it into your own Claude.</p><button class="btn" onclick="closeOv()">Got it</button>');
@@ -604,7 +694,7 @@ function fieldHtml(f) {
     case 'person': {
       const dl = '<datalist id="people">' + (personCache || []).map(p => '<option value="' + esc(p.display) + '">').join('') + '</datalist>';
       return '<div class="' + (f.noPosition ? '' : 'row2') + '"><div class="f"><label>Employee</label><input class="inp" list="people" value="' + esc(v('employee')) + '" placeholder="First Last" oninput="doc.employee=this.value">' + dl + '</div>' +
-        (f.noPosition ? '' : '<div class="f"><label>Position</label><input class="inp" list="positions" value="' + esc(v('position')) + '" placeholder="Paramedic" oninput="doc.position=this.value"><datalist id="positions"><option value="Paramedic"><option value="Lead Paramedic"><option value="Emergency Medical Technician"><option value="Part Time Paramedic"><option value="Part Time EMT"><option value="Volunteer"></datalist></div>') + '</div>';
+        (f.noPosition ? '' : '<div class="f"><label>Position</label><input class="inp" list="positions" value="' + esc(v('position')) + '" placeholder="Lead Paramedic" oninput="doc.position=this.value"><datalist id="positions"><option value="Lead Paramedic"><option value="Part-Time Lead Paramedic"><option value="Crew 2 Paramedic"><option value="Full-Time EMT"><option value="Part-Time EMT"><option value="Volunteer PMA (Paramedic Assistant)"></datalist><div class="hint">Lead and Part-Time Lead Paramedics are in the bargaining unit (IAFF Local 452).</div></div>') + '</div>';
     }
     case 'from':
       return '<div class="row2"><div class="f"><label>From</label><input class="inp" value="' + esc(v('fromName')) + '" oninput="doc.fromName=this.value"></div><div class="f"><label>Your title</label><input class="inp" value="' + esc(v('fromTitle')) + '" placeholder="Battalion Chief" oninput="doc.fromTitle=this.value"></div></div>';
@@ -647,6 +737,20 @@ function fieldHtml(f) {
       return h + '</div>';
     }
     case 'find': return '<div class="f">' + findHtml(f.forSog) + '</div>';
+    case 'ideas': setTimeout(() => { loadPolicy().then(suggest).catch(e => { const el = $('sugg'); if (el) el.innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }); }, 0);
+      return '<div class="f find" style="border-style:solid"><label for="f_ideas">Start here: general ideas and questions</label>' +
+        '<textarea class="inp" id="f_ideas" placeholder="Rough notes in plain words. What happened, dates, what you want to say, questions you have (is this insubordination? which step is this?)" oninput="doc.ideas=this.value;suggestSoon()">' + esc(v('ideas')) + '</textarea>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:flex-start"><button class="btn small" onclick="exportIdeas()">Export to your Claude</button><div><button class="ai-btn" style="padding:7px 11px;font-size:12px" onclick="aiAssist()">&#10024; AI assist</button><div class="ai-note">Not connected to AI yet</div></div></div>' +
+        '<div class="hint">Policies that match what you write show up below. Tap Add to put one in this form. Export to your Claude copies your notes plus the wording of the matching policies so Claude can help write the opening.</div>' +
+        '<div class="lbl" style="margin-top:12px">Suggested policies</div><div class="res" id="sugg"><div class="msg">Loading the policy manual...</div></div></div>';
+    case 'cba': {
+      if (!isUnit()) return '';
+      return '<div class="f"><div class="grp" style="border-color:#c9a227;background:#fffbea"><div class="grp-h" style="color:#7a5d10;font-size:12px">BARGAINING UNIT MEMBER (IAFF LOCAL 452): REVIEW THESE BEFORE ISSUING DISCIPLINE</div>' +
+        '<div class="hint" style="margin-bottom:8px">' + esc(doc.position) + ' is in the bargaining unit (CBA Article 1.1). The CBA has no discipline or just cause article of its own; discipline follows Policy 1053. Offer a union rep for any meeting where discipline is expected (Weingarten, Policy 1053). Search the CBA with the Find a policy box (pick CBA).</div>' +
+        LIB.cba.map(c => '<div class="r" style="background:#fff;border:1.5px solid #e8d38f;border-radius:10px;padding:8px 10px;margin-bottom:6px"><b style="font-size:12.5px">' + esc(c.title) + '</b><p style="margin:4px 0 6px;font-size:11.5px;line-height:1.45">' + esc(c.quote) + '</p>' +
+          (doc.cbaItems.indexOf(c.id) >= 0 ? '<button class="btn small ghost" onclick="toggleSel(\'cbaItems\',\'' + c.id + '\',false);renderForm($(\'main\'),true)">&#10003; Added (remove)</button> ' : '<button class="btn small" onclick="toggleSel(\'cbaItems\',\'' + c.id + '\',true);renderForm($(\'main\'),true)">Add</button> ') +
+          '<button class="btn small ghost" onclick="readCba(\'' + c.id + '\')">Read</button></div>').join('') + '</div></div>';
+    }
     case 'planauto': return '<div class="auto" id="planauto">' + planAutoText() + '</div>';
   }
   return '';
@@ -662,7 +766,7 @@ function renderForm(m, keepScroll) {
   h += '<div class="steps">' + sts.concat([0]).map((_, i) => '<i class="' + (i <= step ? 'on' : '') + '"></i>').join('') + '</div>';
   if (!isReview) {
     h += '<div class="card">' + sts[step].fields.map(fieldHtml).join('') + '</div>';
-    h += '<div class="bar"><button class="btn ghost" onclick="' + (step ? 'step--;renderForm($(\'main\'))' : 'go(\'home\')') + '">' + (step ? 'Back' : 'Cancel') + '</button><button class="btn" onclick="nextStep()">' + (step === sts.length - 1 ? 'Review' : 'Next') + '</button></div>';
+    h += '<div class="bar"><button class="btn ghost" onclick="goBack()">' + (step ? 'Back' : 'Cancel') + '</button><button class="btn" onclick="nextStep()">' + (step === sts.length - 1 ? 'Review' : 'Next') + '</button></div>';
   } else h += reviewHtml();
   m.innerHTML = h;
   if (keepScroll) window.scrollTo(0, y); else window.scrollTo(0, 0);
@@ -670,7 +774,7 @@ function renderForm(m, keepScroll) {
 function nextStep() {
   if (step === 0 && doc.type !== 'sog' && !String(doc.employee).trim()) { toast('Put in the employee name first.', true); return; }
   if (step === 0 && doc.type === 'sog' && !String(doc.title || '').trim()) { toast('Give the SOG a title first.', true); return; }
-  step++; renderForm($('main'));
+  step++; pushNav(); renderForm($('main'));
 }
 
 /* ---------------- review (built in checks, no AI) ---------------- */
@@ -703,6 +807,7 @@ function checks() {
     blank(d.expect) ? bad('No expectations listed.') : (d.expect.some(e => e.what && !e.when) ? warn('Some expectations have no deadline.') : ok('Every expectation has a deadline.'));
     if (blank(d.timeline)) warn('No prior steps listed. If there was earlier coaching or reminders, add them.');
   }
+  if (isUnit() && d.type !== 'coach') warn('Bargaining unit member (IAFF Local 452): offer a union rep for the meeting (Weingarten, Policy 1053). They have 30 calendar days to grieve (CBA Article 14). Confirm they were given the policy you cite (CBA Article 6.1).');
   if (d.type === 'cap') {
     const det = d.mode === 'Detailed';
     if (det) {
@@ -729,8 +834,8 @@ function reviewHtml() {
   h += '<div class="card">' + (isSog
       ? '<label class="ck"><input type="checkbox" ' + (doc.save ? 'checked' : '') + ' onchange="doc.save=this.checked"><div><b>Also save to ' + esc(CONFIG.sogFolder) + ' on the CG Staff site</b></div></label>'
       : (canPersonnel() ? '<label class="ck"><input type="checkbox" ' + (doc.save ? 'checked' : '') + ' onchange="doc.save=this.checked"><div><b>File it in ' + esc(doc.employee || 'the employee') + '\'s personnel folder</b><em>' + esc(CONFIG.personnelFolder + '/' + folderName(doc.employee || 'First Last')) + '</em></div></label>' : '<div class="note">Your account does not file into personnel folders. Download the file and give it to a chief.</div>')) +
-    (doc.type === 'coach' ? '<button class="btn ghost small" onclick="copyEmail()">Copy as email</button>' : '') + '</div>';
-  h += '<div class="bar"><button class="btn ghost" onclick="step--;renderForm($(\'main\'))">Back</button>' +
+    (doc.type === 'coach' ? '<button class="btn ghost small" onclick="emailBox()">Email it</button> <button class="btn ghost small" onclick="copyEmail()">Copy as email text</button>' : '') + '</div>';
+  h += '<div class="bar"><button class="btn ghost" onclick="goBack()">Back</button>' +
     (isQuick ? '<button class="btn" onclick="saveQuick(this)">Save note</button>' : '<button class="btn" onclick="makeWord(this)">Make Word file</button>') + '</div>';
   return h;
 }
@@ -781,6 +886,7 @@ function blocks() {
     if (d.details) { H('Additional Details:'); P(d.details); }
     const st = selectedPolicies('standards'); if (st.length) { H('Standards:'); st.forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
     const po = selectedPolicies('policies'); if (po.length) { H('Violated Policies:'); po.forEach(s => { B.push({ t: 'bul', items: [s.title], bold: true }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
+    const cb = selectedPolicies('cbaItems'); if (cb.length) { H('Collective Bargaining Agreement (IAFF Local 452):'); cb.forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
     const ex = clean(d.expect); if (ex.length) { H('You are expected to immediately:'); B.push({ t: 'bul', items: ex.map(x => x.what + (x.when ? ' (' + x.when + ')' : '')) }); }
     if (d.notice) { H('Progressive Discipline Notice:'); P(d.notice); }
     P(d.closing);
@@ -796,6 +902,7 @@ function blocks() {
       if (d.background || clean(d.prior).length) { H('Background:'); P(d.background); const pr = clean(d.prior); if (pr.length) B.push({ t: 'table', head: ['Requirement (prior step)', 'Status'], rows: pr.map(x => [x.what, x.status]), widths: [78, 22] }); }
       if (clean(d.findings).length) { H('Findings:'); clean(d.findings).forEach(f => { B.push({ t: 'h2', text: f.h }); P(f.t); }); }
       const st = selectedPolicies('standards'), po = selectedPolicies('policies');
+      const cb = selectedPolicies('cbaItems'); po.push(...cb);
       if (st.length || po.length) { H('Applicable Standards:'); st.concat(po).forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
       const ac = clean(d.actions); if (ac.length) { H('Corrective Actions and Timelines:'); B.push({ t: 'p', text: 'You are responsible for meeting and tracking each requirement below.' }); B.push({ t: 'table', head: ['#', 'Requirement', 'Deadline', 'Measure of Success'], rows: ac.map((x, i) => [String(i + 1), x.what, x.when, x.measure]), widths: [6, 44, 22, 28] }); }
       if (cks.length) { H('Review Schedule:'); B.push({ t: 'bul', items: cks.map((n, i) => n + '-day review' + (i === cks.length - 1 ? ' and CAP close-out' : '') + ': week of ' + weekOf(addDays(d.start, n)) + '/' + addDays(d.start, n).slice(0, 4)) }); if (d.reviewers) B.push({ t: 'p', text: 'Reviews will be conducted by ' + d.reviewers + '.' }); }
@@ -805,11 +912,13 @@ function blocks() {
       if (d.wrong) { H('What went wrong:'); P(d.wrong); }
       if (clean(d.fixing).length) { H('What this plan is fixing:'); B.push({ t: 'bul', items: clean(d.fixing) }); }
       if (clean(d.youDo).length) { H('What you need to do:'); B.push({ t: 'bul', items: clean(d.youDo).map(x => (x[0] ? x[0].replace(/\.?$/, '. ') : '') + x[1]), leadBold: true }); }
+      const spo = d.extraPolicies.filter(p => p.on); if (spo.length) { H('Applicable policy:'); spo.forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
       if (clean(d.districtDo).length) { H('What the District will do:'); B.push({ t: 'bul', items: clean(d.districtDo) }); }
       const ci = clean(d.checkins);
       H('Check-ins:');
       if (ci.length) B.push({ t: 'bul', items: ci.map(x => (x[0] ? x[0].replace(/\.?$/, '. ') : '') + x[1]), leadBold: true });
       else B.push({ t: 'bul', items: cks.map((n, i) => n + ' days (week of ' + weekOf(addDays(d.start, n)) + ').' + (i === cks.length - 1 ? ' Plan closes. You will get written notice that it is no longer in effect.' : '')) });
+      const cbs = selectedPolicies('cbaItems'); if (cbs.length) { H('Collective Bargaining Agreement (IAFF Local 452):'); cbs.forEach(s => { B.push({ t: 'pb', text: s.title }); B.push({ t: 'p', text: s.quote, indent: true }); }); }
       H('If this does not get done:'); P(d.consequence);
       if (d.standing) { H('A note on where this stands:'); P(d.standing); }
       B.push({ t: 'p', text: 'This plan requires the Chief\'s approval before implementation, per Policy 1053.5.' });
@@ -887,6 +996,21 @@ function copyForClaude() {
     ? 'Review this draft NCEMS / Clark Fire 13 Standard Operating Guideline. Check it against the NCEMS Policy Manual and the IAFF Local 452 CBA: flag any conflict, any rule that should cite a policy or CBA article, unclear wording a line provider could misread, and anything missing from Purpose, Scope, Roles, Procedures or References. Plain language, no dashes. Suggest specific edits.'
     : 'Review this NCEMS ' + kind + ' before I deliver it. Check: facts and dates are specific; the policies cited fit the conduct (NCEMS / Clark Fire 13 Policy Manual, Policy 1053 Discipline); expectations are clear and measurable with deadlines; tone is firm, fair and professional; nothing reads as personal or emotional; ' + (doc.type === 'cap' ? 'it has the parts Policy 1053.5 requires (deficiencies, goals, monitoring, timeline, consequences); ' : '') + 'and anything a union rep or HR would push back on. Suggest specific edits.';
   copyText(prompt + '\n\n---\n\n' + plainText(), 'Copied. Paste it into Claude.');
+}
+function guessEmail(n) { const p = String(n || '').trim().toLowerCase().replace(/[^a-z\s'-]/g, '').split(/\s+/).filter(Boolean); return p.length >= 2 ? p[0][0] + '.' + p[p.length - 1].replace(/'/g, '') + '@northcountryems.org' : ''; }
+function emailBody() { return (doc.employee.split(' ')[0] || '') + ',\n\n' + blocks().filter(b => b.t !== 'memo' && b.t !== 'sig').map(b => b.t === 'bul' ? b.items.map(x => '  * ' + x).join('\n') : b.text).join('\n\n') + '\n\n' + doc.fromName + '\n' + doc.fromTitle; }
+function emailBox() {
+  openOv('<h2>Email this coaching</h2><p>Opens your email app with everything filled in. Check it before you send.</p>' +
+    '<div class="f"><label>To (the employee)</label><input class="inp" id="em-to" value="' + esc(guessEmail(doc.employee)) + '"></div>' +
+    '<label class="ck"><input type="checkbox" id="em-cc"><div><b>CC the Fire Chief</b><em>b.shirley@northcountryems.org</em></div></label>' +
+    '<div class="f"><label>BCC (optional, other BCs)</label><input class="inp" id="em-bcc" placeholder="d.langdon@northcountryems.org, d.madler@northcountryems.org"></div>' +
+    '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="closeOv()">Cancel</button><button class="btn" onclick="sendEmail()">Open email</button></div>');
+}
+function sendEmail() {
+  const to = $('em-to').value.trim(), cc = $('em-cc').checked ? 'b.shirley@northcountryems.org' : '', bcc = $('em-bcc').value.trim(), body = emailBody();
+  const url = 'mailto:' + encodeURIComponent(to) + '?' + [cc ? 'cc=' + encodeURIComponent(cc) : '', bcc ? 'bcc=' + encodeURIComponent(bcc) : '', 'subject=' + encodeURIComponent(doc.subject || 'Documented Coaching'), 'body=' + encodeURIComponent(body.length > 1800 ? body.slice(0, 1800) + '\n\n[Full text copied to your clipboard, paste it here]' : body)].filter(Boolean).join('&');
+  if (body.length > 1800) { try { navigator.clipboard.writeText(body); } catch (e) {} }
+  closeOv(); location.href = url;
 }
 function copyEmail() {
   const body = blocks().filter(b => b.t !== 'memo' && b.t !== 'sig').map(b => b.t === 'bul' ? b.items.map(x => '  * ' + x).join('\n') : b.text).join('\n\n');
@@ -997,7 +1121,7 @@ async function saveQuick(btn) {
     if (DEMO) { DEMO_FILES.push({ person: folderName(doc.employee), name, text: txt }); toast('Saved (demo).'); }
     else if (canPersonnel()) { await uploadFile(CONFIG.personnelFolder + '/' + folderName(doc.employee), name, new Blob([txt], { type: 'text/plain' })); toast('Quick note filed.'); }
     else { download(new Blob([txt], { type: 'text/plain' }), name); toast('Downloaded. Give it to a chief to file.'); }
-    const who = folderName(doc.employee); personCache = null; doc = null;
+    const who = folderName(doc.employee); personCache = null; doc._done = true; doc = null;
     canPersonnel() ? go('person:' + who) : go('home');
   } catch (e) { toast(e.message || String(e), true); btn.disabled = false; }
 }
@@ -1014,9 +1138,9 @@ async function loadPeople() {
 function displayName(folder) { const m = /^([^,]+),\s*(.+)$/.exec(folder); return m ? m[2] + ' ' + m[1] : folder; }
 function initialsOf(n) { return displayName(n).split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(); }
 async function renderSearch(m) {
-  if (!canPersonnel()) { m.innerHTML = '<div class="note">Personnel search is for the chiefs. Your account can still make write ups and SOG drafts.</div>'; return; }
-  m.innerHTML = '<div class="hello"><h2>Search</h2><span>Employees, and words inside filed documents</span></div>' +
-    '<div class="search-big"><input class="inp" id="sq" placeholder="Name, or a word like PEAC" value="' + esc(searchQ) + '" onkeydown="if(event.key===\'Enter\')doSearch()"><button class="btn" onclick="doSearch()">Search</button></div><div id="sres"><div class="msg">Loading employees...</div></div>';
+  if (!canPersonnel()) { m.innerHTML = backBtn() + '<div class="note">Personnel search is for the chiefs. Your account can still make write ups and SOG drafts.</div>'; return; }
+  m.innerHTML = backBtn() + '<div class="hello"><h2>Search</h2><span>Employees, and words inside filed documents</span></div>' +
+    '<div class="search-big"><input class="inp" id="sq" placeholder="Name like Langdon, or a word like PEAC" value="' + esc(searchQ) + '" onkeydown="if(event.key===\'Enter\')doSearch()"><button class="btn" onclick="doSearch()">Search</button></div>' + spLinks() + '<div id="sres"><div class="msg">Loading employees...</div></div>';
   try { await loadPeople(); } catch (e) { $('sres').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; return; }
   doSearch();
 }
@@ -1055,7 +1179,7 @@ function docRow(f, who) {
     '<div class="acts">' + (f.webUrl ? '<a href="' + esc(f.webUrl) + '" target="_blank" rel="noopener">Open</a>' : '') + '</div></div></div>';
 }
 async function renderPerson(m, folder) {
-  m.innerHTML = '<div class="person-hd"><div class="avatar">' + esc(initialsOf(folder)) + '</div><div style="flex:1"><h2 style="margin:0;font-size:18px">' + esc(displayName(folder)) + '</h2><span style="font-size:11px;color:var(--muted)">' + esc(CONFIG.personnelFolder + '/' + folder) + '</span></div></div>' +
+  m.innerHTML = backBtn() + '<div class="person-hd"><div class="avatar">' + esc(initialsOf(folder)) + '</div><div style="flex:1"><h2 style="margin:0;font-size:18px">' + esc(displayName(folder)) + '</h2><span style="font-size:11px;color:var(--muted)">' + esc(CONFIG.personnelFolder + '/' + folder) + '</span></div></div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0"><button class="btn small" onclick="newFor(\'quick\',' + esc(JSON.stringify(displayName(folder))).replace(/"/g, '&quot;') + ')">+ Quick note</button><button class="btn small ghost" onclick="pickWriteup(' + esc(JSON.stringify(displayName(folder))).replace(/"/g, '&quot;') + ')">+ Write up</button><button class="btn small ghost" onclick="uploadOld(' + esc(JSON.stringify(folder)).replace(/"/g, '&quot;') + ')">Upload old file</button></div>' +
     '<div id="plist"><div class="msg">Loading...</div></div>';
   let files;
@@ -1068,7 +1192,7 @@ async function renderPerson(m, folder) {
   $('plist').innerHTML = (files.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + Object.keys(counts).map(t => '<span class="tchip" style="background:' + TYPES[t].color + '">' + esc(TYPES[t].name) + ': ' + counts[t] + '</span>').join('') + '</div>' : '') +
     (files.length ? files.map(f => docRow(f, '')).join('') : '<div class="msg">Nothing filed yet.</div>');
 }
-function newFor(type, name) { doc = freshDoc(type); doc.employee = name; step = 0; route = 'form'; render(); }
+function newFor(type, name) { doc = freshDoc(type); doc.employee = name; step = 0; route = 'form'; pushNav(); window.scrollTo(0, 0); render(); }
 function pickWriteup(name) { openOv('<h2>Write up for ' + esc(name) + '</h2><div class="tiles">' + ['coach', 'verbal', 'written', 'cap'].map(t => tile(t, "closeOv();newFor('" + t + "'," + esc(JSON.stringify(name)).replace(/"/g, '&quot;') + ")")).join('') + '</div><br><button class="btn ghost" onclick="closeOv()">Cancel</button>'); }
 function uploadOld(folder) {
   openOv('<h2>Upload an old file</h2><p>For write ups done before this app. It gets renamed so it sorts by date.</p>' +
@@ -1104,6 +1228,8 @@ const DEMO_FILES = [
 ];
 const DEMO_POLICY = '# Discipline\n1053.4 PROGRESSIVE DISCIPLINE\nProgressive Discipline is a system of discipline where the penalties increase upon repeat occurrences.\n1053.5 SECTION TITLE\nCorrective Action Plan (CAP). Following any disciplinary action, all officers shall develop a Corrective Action Plan with subordinates. Immediate supervisors shall submit for approval the Corrective Action Plan to the Chief prior to implementation.\n# Standards of Conduct\n325.3 RESPONSIBILITIES\nMembers shall be familiar with and obedient to the policies.\n325.5 COMPETENT PERFORMANCE\nFailure to conform to work standards, including timely documentation of patient care reports and charts.\n# Personal Communication Devices\n702.4 USE WHILE DRIVING\nMembers shall not use a personal phone or cell device while driving an agency vehicle or ambulance.\n';
 
+const DEMO_CBA = '## ARTICLE 14 — GRIEVANCE PROCEDURE\n**STEP I:** The grievance shall be submitted in writing to the employee\'s immediate supervisor within thirty (30) calendar days after the act that caused the grievance.\n## ARTICLE 20 — PROBATION\n**20.1** Newly hired full time employees who do not complete probation may be terminated without recourse to the grievance procedure.\n';
+
 /* ---------------- start ---------------- */
 function renderSignin(msg) {
   $('main').innerHTML = '<div class="center"><div class="center-card"><div class="center-head"><img src="logo.png" alt=""><h2>FORMS</h2><p>Write ups, quick notes and SOG drafts</p></div><div class="center-body">' +
@@ -1113,6 +1239,7 @@ function renderSignin(msg) {
 }
 window.addEventListener('beforeunload', e => { if (doc && route === 'form' && !doc._done) { e.preventDefault(); e.returnValue = ''; } });
 (async function start() {
+  pushNav(true);
   if (DEMO) { $('hdr-sub').textContent = 'DEMO · nothing saves'; render(); return; }
   try { await initAuth(); } catch (e) { renderSignin(e.message); return; }
   if (!account) { renderSignin(); return; }
@@ -1121,7 +1248,7 @@ window.addEventListener('beforeunload', e => { if (doc && route === 'form' && !d
     return;
   }
   $('hdr-sub').textContent = signer().name + (signer().title ? ', ' + signer().title : '');
-  render();
+  pushNav(true); render();
   if (canPersonnel()) loadPeople().catch(() => {});
 })();
 </script>

@@ -2,7 +2,7 @@
 
 Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search. Makes a Word file in the agency's own format and files it on the CG Staff SharePoint site.
 
-**Version 1.0**
+**Version 1.1**
 
 ## Links
 
@@ -62,6 +62,16 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 - **Employee page:** everything filed for that person, newest first, quick notes shown in full, Open goes to the Word file in SharePoint. Upload old file adds past write ups and renames them so they sort by date
 
 ## Changelog
+
+### v1.1
+- Back works one page at a time: the browser back button, the phone back swipe and the Back buttons all go Review > last step > earlier steps > Forms home, and employee page > Search > home. Back no longer drops you out to the Microsoft sign in page. Backing out of a form's first page asks before throwing it away
+- New first box on the "what happened" page: Start here, general ideas and questions. Matching policies show up under it as you type (each piece of the notes is searched on its own) with Add and Read buttons. Export to your Claude copies the notes, what is in the form so far, and the full wording of the matching policy and CBA sections, with a prompt to help write the opening
+- The Find a policy search stays as is, now with Both / Policy manual / CBA buttons
+- Bargaining unit box for Lead Paramedic and Part-Time Lead Paramedic (CBA Article 1.1) on reprimands and CAPs: CBA items to review before issuing discipline (Articles 1.1, 6, 14, 20, 5, 25, 23, 24) with Add and Read, plus the Weingarten reminder. Added items print under "Collective Bargaining Agreement (IAFF Local 452)". The review step reminds about the union rep and the 30 day grievance window
+- Positions: Lead Paramedic, Part-Time Lead Paramedic, Crew 2 Paramedic, Full-Time EMT, Part-Time EMT, Volunteer PMA (Paramedic Assistant). Still free typing
+- Documented Coaching: Email it button opens your email app addressed to the employee (first initial.last@northcountryems.org, editable), optional CC to the Fire Chief and BCC, subject and text filled in
+- Search hint says "Name, like Langdon". Links to the Personnel Files folder and the CG Staff documents in SharePoint on the home and search pages
+- Short CAP prints any policies you added under "Applicable policy"
 
 ### v1.0
 - First version: Quick Note, Documented Coaching, Written Verbal Reprimand, Written Reprimand, Corrective Action Plan (Short and Detailed), SOG Draft
