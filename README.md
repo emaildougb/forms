@@ -2,11 +2,12 @@
 
 Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search. Makes a Word file in the agency's own format and files it on the CG Staff SharePoint site.
 
-**Version 1.1**
+**Version 1.2**
 
 ## Links
 
-- Live: [https://forms.northcountryems.org/](https://forms.northcountryems.org/)
+- Live now: [https://emaildougb.github.io/forms/](https://emaildougb.github.io/forms/)
+- Live after the CNAME switch: [https://forms.northcountryems.org/](https://forms.northcountryems.org/)
 - Demo (sample data, nothing saves): [https://forms.northcountryems.org/?demo=1](https://forms.northcountryems.org/?demo=1)
 - Repo: [https://github.com/emaildougb/forms](https://github.com/emaildougb/forms)
 - Upload: [https://github.com/emaildougb/forms/upload/main](https://github.com/emaildougb/forms/upload/main)
@@ -20,7 +21,7 @@ Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search.
 - `logo.png`: NCEMS round logo
 - `apple-touch-icon.png`, `icon-512.png`: home screen icon
 - `manifest.json`: home screen name "Forms"
-- `CNAME`: forms.northcountryems.org
+- `CNAME`: forms.northcountryems.org (not in this zip yet. Add it when the Entra redirect URI for forms.northcountryems.org is in place)
 - `README.md`: this file
 
 The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages files are public, and the manual is Lexipol's copyrighted text. The app reads them from the CG Staff SharePoint site after you sign in: `Forms Reference/policy-manual.md` and `Forms Reference/cba.md`. To update either one, replace the file in that folder with the same name.
@@ -62,6 +63,14 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 - **Employee page:** everything filed for that person, newest first, quick notes shown in full, Open goes to the Word file in SharePoint. Upload old file adds past write ups and renames them so they sort by date
 
 ## Changelog
+
+### v1.2
+- Staff list built in: all 64 members of the allncems group (pulled 10/19/2026). The Employee box suggests names as you type and shows "On the NCEMS staff list" when it matches
+- Misspelled or unknown names are stopped at step 1, with a "Use Josh Robertson" style fix when it's close. Matches are saved with the exact staff spelling, so files land in the right "Last, First" folder (two word last names like Ben Abdallah work now)
+- Not an NCEMS employee checkbox: type any name for students, ride alongs, hospital or other agency staff. The document says "(non-employee)" and the box asks for role or agency instead of position. It files to Personnel Files/Last, First like everyone else
+- Search lists everyone on the staff list, even with nothing filed yet, and marks folders for people not on the staff list
+- Coaching email guesses the address from the staff spelling
+- To update the staff list: edit the STAFF line in index.html (one "Last, First" per person) or ask Claude to pull allncems again
 
 ### v1.1
 - Back works one page at a time: the browser back button, the phone back swipe and the Back buttons all go Review > last step > earlier steps > Forms home, and employee page > Search > home. Back no longer drops you out to the Microsoft sign in page. Backing out of a form's first page asks before throwing it away

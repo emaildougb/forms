@@ -136,7 +136,7 @@
    file in the agency's format and files it in the Personnel Files
    folder on the CG Staff SharePoint site. Search by employee.
    ===================================================================== */
-const VERSION = '1.1';
+const VERSION = '1.2';
 
 const CONFIG = {
   clientId:  '254c214f-bfe2-4ebb-9294-99815e167ab0',   // same Entra app as CG Staff and Facilities and Grounds
@@ -431,7 +431,7 @@ const FORMS = {
 let route = 'home', doc = null, step = 0, personCache = null, pol = null, polLoading = null, lastResults = [];
 function freshDoc(type) {
   const s = signer();
-  const d = { type, employee: '', position: '', fromName: s.name, fromTitle: s.title, date: todayISO(), start: todayISO(), save: true };
+  const d = { type, employee: '', position: '', fromName: s.name, fromTitle: s.title, date: todayISO(), start: todayISO(), save: true, nonEmp: false };
   FORMS[type].forEach(st => st.fields.forEach(f => {
     if (!f.k || d[f.k] !== undefined) return;
     if (f.t === 'list' || f.t === 'pairs' || f.t === 'rows' || f.t === 'topics' || f.t === 'policies' || f.t === 'standards') d[f.k] = Array.isArray(f.def) ? f.def.slice() : [];
@@ -667,7 +667,7 @@ async function exportIdeas() {
   const q = suggestText(), matches = pol ? suggestFor(q, 6) : [];
   const T = TYPES[doc.type];
   let out = 'Help me write an NCEMS / Clark Fire 13 ' + T.name + (doc.type === 'cap' ? ' (' + doc.mode + ')' : '') + '. Draft the opening paragraph and suggest what goes in each section, using the agency memo format (TO / FROM / DATE / SUBJECT). Keep it factual, firm and fair, plain language, no dashes. Cite only the policies below, by number and title, where they fit the conduct. Tell me if a different discipline step or other policies fit better, and anything a union rep or HR would question.\n\n';
-  out += 'Employee: ' + (doc.employee || '[name]') + (doc.position ? ', ' + doc.position : '') + (isUnit() ? ' (bargaining unit member, IAFF Local 452)' : '') + '\nFrom: ' + fromLine() + '\nDate: ' + isoToUS(doc.date) + '\n\n';
+  out += (doc.nonEmp ? 'Name (non-employee): ' : 'Employee: ') + (doc.employee || '[name]') + (doc.position ? ', ' + doc.position : '') + (isUnit() ? ' (bargaining unit member, IAFF Local 452)' : '') + '\nFrom: ' + fromLine() + '\nDate: ' + isoToUS(doc.date) + '\n\n';
   out += 'MY NOTES AND QUESTIONS:\n' + (doc.ideas || '(none yet)') + '\n';
   const typed = [(doc.concerns || []).filter(Boolean).map(c => '- ' + c).join('\n'), doc.details, doc.wrong].filter(Boolean).join('\n');
   if (typed) out += '\nWHAT I HAVE IN THE FORM SO FAR:\n' + typed + '\n';
@@ -692,9 +692,12 @@ function fieldHtml(f) {
   const hint = f.hint ? '<div class="hint">' + esc(f.hint) + '</div>' : '';
   switch (f.t) {
     case 'person': {
-      const dl = '<datalist id="people">' + (personCache || []).map(p => '<option value="' + esc(p.display) + '">').join('') + '</datalist>';
-      return '<div class="' + (f.noPosition ? '' : 'row2') + '"><div class="f"><label>Employee</label><input class="inp" list="people" value="' + esc(v('employee')) + '" placeholder="First Last" oninput="doc.employee=this.value">' + dl + '</div>' +
-        (f.noPosition ? '' : '<div class="f"><label>Position</label><input class="inp" list="positions" value="' + esc(v('position')) + '" placeholder="Lead Paramedic" oninput="doc.position=this.value"><datalist id="positions"><option value="Lead Paramedic"><option value="Part-Time Lead Paramedic"><option value="Crew 2 Paramedic"><option value="Full-Time EMT"><option value="Part-Time EMT"><option value="Volunteer PMA (Paramedic Assistant)"></datalist><div class="hint">Lead and Part-Time Lead Paramedics are in the bargaining unit (IAFF Local 452).</div></div>') + '</div>';
+      const names = STAFF.map(displayName); (personCache || []).forEach(p => { if (names.indexOf(p.display) < 0) names.push(p.display); });
+      const dl = doc.nonEmp ? '' : '<datalist id="people">' + names.sort().map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>';
+      return '<div class="' + (f.noPosition ? '' : 'row2') + '"><div class="f"><label>' + (doc.nonEmp ? 'Name (non-employee)' : 'Employee') + '</label><input class="inp" id="emp-in" ' + (doc.nonEmp ? '' : 'list="people" ') + 'autocomplete="off" value="' + esc(v('employee')) + '" placeholder="' + (doc.nonEmp ? 'First Last, any name' : 'Start typing, then pick from the list') + '" oninput="empInput(this)">' + dl +
+        '<div class="hint" id="emp-st">' + empStatusHtml() + '</div>' +
+        '<label class="ck" style="margin-top:6px"><input type="checkbox" ' + (doc.nonEmp ? 'checked' : '') + ' onchange="setNonEmp(this.checked)"><div><b>Not an NCEMS employee</b><em>Student, ride along, hospital or other agency staff. Type any name.</em></div></label></div>' +
+        (f.noPosition ? '' : doc.nonEmp ? '<div class="f"><label>Role or agency</label><input class="inp" value="' + esc(v('position')) + '" placeholder="EMT student, PeaceHealth RN, Clark Fire" oninput="doc.position=this.value"></div>' : '<div class="f"><label>Position</label><input class="inp" list="positions" value="' + esc(v('position')) + '" placeholder="Lead Paramedic" oninput="doc.position=this.value"><datalist id="positions"><option value="Lead Paramedic"><option value="Part-Time Lead Paramedic"><option value="Crew 2 Paramedic"><option value="Full-Time EMT"><option value="Part-Time EMT"><option value="Volunteer PMA (Paramedic Assistant)"></datalist><div class="hint">Lead and Part-Time Lead Paramedics are in the bargaining unit (IAFF Local 452).</div></div>') + '</div>';
     }
     case 'from':
       return '<div class="row2"><div class="f"><label>From</label><input class="inp" value="' + esc(v('fromName')) + '" oninput="doc.fromName=this.value"></div><div class="f"><label>Your title</label><input class="inp" value="' + esc(v('fromTitle')) + '" placeholder="Battalion Chief" oninput="doc.fromTitle=this.value"></div></div>';
@@ -773,6 +776,8 @@ function renderForm(m, keepScroll) {
 }
 function nextStep() {
   if (step === 0 && doc.type !== 'sog' && !String(doc.employee).trim()) { toast('Put in the employee name first.', true); return; }
+  if (step === 0 && doc.type !== 'sog' && !doc.nonEmp && !nameKnown(doc.employee)) { toast('That name is not on the staff list. Pick it from the list, or check Not an NCEMS employee.', true); const i = $('emp-in'); if (i) i.focus(); return; }
+  if (step === 0 && doc.type !== 'sog' && !doc.nonEmp) { const sm = staffMatch(doc.employee); if (sm) doc.employee = displayName(sm); }
   if (step === 0 && doc.type === 'sog' && !String(doc.title || '').trim()) { toast('Give the SOG a title first.', true); return; }
   step++; pushNav(); renderForm($('main'));
 }
@@ -856,7 +861,7 @@ function paras(text) {
   flush(); return out;
 }
 function clean(a) { return (a || []).filter(x => String(Array.isArray(x) ? x.join('') : (typeof x === 'object' ? Object.values(x).join('') : x)).trim()); }
-function empLine() { return doc.employee + (doc.position ? ', ' + doc.position : ''); }
+function empLine() { return doc.employee + (doc.position ? ', ' + doc.position : '') + (doc.nonEmp ? ' (non-employee)' : ''); }
 function fromLine() { return doc.fromName + (doc.fromTitle ? ', ' + doc.fromTitle : ''); }
 function selectedPolicies(k) { return (doc[k] || []).map(libItem).filter(Boolean).concat(k === 'policies' ? doc.extraPolicies.filter(p => p.on) : []); }
 function sigBlock(extraChief) {
@@ -997,7 +1002,7 @@ function copyForClaude() {
     : 'Review this NCEMS ' + kind + ' before I deliver it. Check: facts and dates are specific; the policies cited fit the conduct (NCEMS / Clark Fire 13 Policy Manual, Policy 1053 Discipline); expectations are clear and measurable with deadlines; tone is firm, fair and professional; nothing reads as personal or emotional; ' + (doc.type === 'cap' ? 'it has the parts Policy 1053.5 requires (deficiencies, goals, monitoring, timeline, consequences); ' : '') + 'and anything a union rep or HR would push back on. Suggest specific edits.';
   copyText(prompt + '\n\n---\n\n' + plainText(), 'Copied. Paste it into Claude.');
 }
-function guessEmail(n) { const p = String(n || '').trim().toLowerCase().replace(/[^a-z\s'-]/g, '').split(/\s+/).filter(Boolean); return p.length >= 2 ? p[0][0] + '.' + p[p.length - 1].replace(/'/g, '') + '@northcountryems.org' : ''; }
+function guessEmail(n) { if (doc && doc.nonEmp) return ''; const se = staffEmail(n); if (se) return se; const p = String(n || '').trim().toLowerCase().replace(/[^a-z\s'-]/g, '').split(/\s+/).filter(Boolean); return p.length >= 2 ? p[0][0] + '.' + p[p.length - 1].replace(/'/g, '') + '@northcountryems.org' : ''; }
 function emailBody() { return (doc.employee.split(' ')[0] || '') + ',\n\n' + blocks().filter(b => b.t !== 'memo' && b.t !== 'sig').map(b => b.t === 'bul' ? b.items.map(x => '  * ' + x).join('\n') : b.text).join('\n\n') + '\n\n' + doc.fromName + '\n' + doc.fromTitle; }
 function emailBox() {
   openOv('<h2>Email this coaching</h2><p>Opens your email app with everything filled in. Check it before you send.</p>' +
@@ -1092,7 +1097,40 @@ async function buildDocx() {
   zip.file('word/document.xml', xml);
   return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
-function folderName(n) { const p = String(n || '').trim().replace(/\s+/g, ' ').replace(/[\\/:*?"<>|#%]/g, '').split(' '); if (p.length < 2) return p[0] || 'Unknown'; const last = p.pop(); return last + ', ' + p.join(' '); }
+const STAFF = ["Alderman, Dallas", "Allison, Jason", "Andrus, Chuck", "Anthony, Jeremy", "Avery, Tracey", "Baker, Preston", "Bauska, Hunter", "Becker, Remington", "Ben Abdallah, Wala", "Boyce, Doug", "Canfield, Eli", "Cooper, Naomi", "Cornelia, Hayden", "Davis, Jacob", "Dawkins, Lauren", "Dickson, Joseph", "Fergason, Ashton", "Fields, Andrew", "Fox, Danielle", "Fox, Josh", "Griffith, Ariel", "Hagen, Stephanie", "Hinton, Trevor", "Hughey, Matthew", "Jory, Georgia", "Knight, Aaron", "Komm, Tyler", "LaBarbera, Sean", "Langdon, Derek", "Larson, Danielle", "Leavitt, Victoria", "Lendev, Alexander", "Long, Garrett", "Madler, Dennis", "Mallare, Lacy", "Maylone, Lyndsey", "Mraz, Michael", "Murray, Kelan", "Noble, Isabella", "O'Donnell-Field, Connor", "O'Loughlin, Kelly", "Parks, Sean", "Pedersen, Timothy", "Quintero, Richard", "Reid, Kim", "Reyes, Jesus", "Robb, Brody", "Robertson, Josh", "Rohrer, Brant", "Russell, Roni", "Savage, Ryan", "Schmitz, Jamie", "Schutts, Stephen", "Scott, Colin", "Scott, McKenzie", "Seibert, Carol", "Shirley, Bryce", "Skinner, Heath", "Slack, Joseph", "Snow, Keith", "Stafford, Nicholas", "Venneri, Tyler", "Wagner, Mike", "Waliezer, Dustin"];
+/* 1.2: names come from the allncems group (64 members, pulled 10/19/2026). Update this list when people come and go.
+   Anyone not on it (students, hospital staff, outside agencies) needs "Not an NCEMS employee" checked. */
+function normName(n) { return String(n || '').toLowerCase().replace(/[^a-z' -]/g, '').replace(/\s+/g, ' ').trim(); }
+function staffMatch(n) { const k = normName(n); if (!k) return null; return STAFF.find(f => normName(displayName(f)) === k || normName(f) === k) || null; }
+function folderMatch(n) { const k = normName(n); return (personCache || []).find(p => normName(p.display) === k || normName(p.name) === k) || null; }
+function nameKnown(n) { return !!(staffMatch(n) || folderMatch(n)); }
+function lev(a, b) { const m = []; for (let i = 0; i <= a.length; i++) { m[i] = [i]; for (let j = 1; j <= b.length; j++) m[i][j] = i ? Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) : j; } return m[a.length][b.length]; }
+function nameGuess(n) {
+  const k = normName(n); if (k.length < 3) return null;
+  const words = k.split(' ');
+  let best = null, bs = 99, bm = 0;
+  STAFF.forEach(f => { const d = normName(displayName(f)), parts = d.split(' ');
+    const full = lev(k, d); let hits = 0;
+    words.forEach(w => { if (w.length >= 3 && parts.some(p => p.startsWith(w.slice(0, 3)) || lev(w, p) <= 2)) hits++; });
+    const sc = full - 4 * hits;
+    if (sc < bs) { bs = sc; best = f; bm = hits; } });
+  return best && (bm > 0 || lev(k, normName(displayName(best))) <= 3) ? displayName(best) : null;
+}
+function empStatusHtml() {
+  const n = String(doc.employee || '').trim();
+  if (!n) return '';
+  if (doc.nonEmp) return '<span style="color:var(--muted)">Filed as a non-employee. Type the name the way they spell it.</span>';
+  if (staffMatch(n)) return '<span style="color:#24622a">&#10003; On the NCEMS staff list</span>';
+  if (folderMatch(n)) return '<span style="color:#24622a">&#10003; Has a personnel folder</span> <span style="color:var(--muted)">(not on the current staff list)</span>';
+  const g = nameGuess(n);
+  return '<span style="color:#9a3412">Not on the staff list.</span> ' + (g ? '<button type="button" class="btn small ghost" style="padding:3px 8px" onclick="pickEmp(' + esc(JSON.stringify(g)).replace(/"/g, '&quot;') + ')">Use ' + esc(g) + '</button> ' : '') + '<span style="color:var(--muted)">Pick a name from the list, or check Not an NCEMS employee.</span>';
+}
+function empInput(el) { doc.employee = el.value; const st = $('emp-st'); if (st) st.innerHTML = empStatusHtml(); }
+function pickEmp(n) { doc.employee = n; const i = $('emp-in'); if (i) i.value = n; const st = $('emp-st'); if (st) st.innerHTML = empStatusHtml(); }
+function setNonEmp(on) { doc.nonEmp = on; renderForm($('main'), true); }
+function staffEmail(n) { const f = staffMatch(n); if (!f) return ''; const m = /^([^,]+),\s*(.+)$/.exec(f); return (m[2][0] + '.' + m[1].replace(/[\s']/g, '')).toLowerCase() + '@northcountryems.org'; }
+function folderName(n) { const sm = staffMatch(n); if (sm) return sm; const fm = folderMatch(n); if (fm) return fm.name; return folderName0(n); }
+function folderName0(n) { const p = String(n || '').trim().replace(/\s+/g, ' ').replace(/[\\/:*?"<>|#%]/g, '').split(' '); if (p.length < 2) return p[0] || 'Unknown'; const last = p.pop(); return last + ', ' + p.join(' '); }
 function fileBase() {
   if (doc.type === 'sog') return 'NCEMS ' + (doc.title || 'Untitled').replace(/[\\/:*?"<>|#%]/g, '') + ' SOG ' + (doc.revision || 'Draft v1');
   return doc.date + ' ' + TYPES[doc.type].file + (doc.type === 'cap' ? ' (' + doc.mode + ')' : '') + ' - ' + String(doc.employee).replace(/[\\/:*?"<>|#%]/g, '');
@@ -1116,7 +1154,7 @@ async function makeWord(btn) {
 async function saveQuick(btn) {
   btn.disabled = true;
   try {
-    const txt = 'QUICK NOTE (' + doc.kind + ')\nEmployee: ' + doc.employee + '\nDate: ' + isoToUS(doc.date) + '\nBy: ' + fromLine() + '\nTitle: ' + (doc.title || '') + '\n\n' + (doc.note || '') + '\n';
+    const txt = 'QUICK NOTE (' + doc.kind + ')\n' + (doc.nonEmp ? 'Name (non-employee): ' : 'Employee: ') + doc.employee + (doc.nonEmp && doc.position ? ', ' + doc.position : '') + '\nDate: ' + isoToUS(doc.date) + '\nBy: ' + fromLine() + '\nTitle: ' + (doc.title || '') + '\n\n' + (doc.note || '') + '\n';
     const name = doc.date + ' Quick Note (' + doc.kind + ') - ' + (doc.title || '').replace(/[\\/:*?"<>|#%]/g, '').slice(0, 60) + '.txt';
     if (DEMO) { DEMO_FILES.push({ person: folderName(doc.employee), name, text: txt }); toast('Saved (demo).'); }
     else if (canPersonnel()) { await uploadFile(CONFIG.personnelFolder + '/' + folderName(doc.employee), name, new Blob([txt], { type: 'text/plain' })); toast('Quick note filed.'); }
@@ -1146,9 +1184,12 @@ async function renderSearch(m) {
 }
 async function doSearch() {
   searchQ = ($('sq') || {}).value || ''; const q = searchQ.trim().toLowerCase(), el = $('sres');
-  const ppl = (personCache || []).filter(p => !q || p.name.toLowerCase().includes(q) || p.display.toLowerCase().includes(q));
+  const all = (personCache || []).map(p => Object.assign({}, p, { off: !STAFF.includes(p.name) }));
+  STAFF.forEach(f => { if (!all.some(p => p.name === f)) all.push({ name: f, display: displayName(f), count: 0 }); });
+  all.sort((a, b) => a.name.localeCompare(b.name));
+  const ppl = all.filter(p => !q || p.name.toLowerCase().includes(q) || p.display.toLowerCase().includes(q));
   let h = '<div class="lbl">Employees' + (q ? ' matching "' + esc(searchQ) + '"' : '') + ' (' + ppl.length + ')</div><div class="plist">' +
-    (ppl.length ? ppl.map(p => '<div class="p" onclick="go(\'person:\'+' + esc(JSON.stringify(p.name)).replace(/"/g, '&quot;') + ')"><div class="avatar" style="width:36px;height:36px;font-size:13px">' + esc(initialsOf(p.name)) + '</div><div style="flex:1"><b>' + esc(p.display) + '</b>' + (p.count != null ? '<div style="font-size:11px;color:var(--muted)">' + p.count + ' item' + (p.count === 1 ? '' : 's') + '</div>' : '') + '</div><span>&#8250;</span></div>').join('') : '<div class="msg">No employee folder by that name yet. A folder is made the first time something is filed for them.</div>') + '</div>';
+    (ppl.length ? ppl.map(p => '<div class="p" onclick="go(\'person:\'+' + esc(JSON.stringify(p.name)).replace(/"/g, '&quot;') + ')"><div class="avatar" style="width:36px;height:36px;font-size:13px">' + esc(initialsOf(p.name)) + '</div><div style="flex:1"><b>' + esc(p.display) + '</b>' + (p.count != null ? '<div style="font-size:11px;color:var(--muted)">' + (p.count ? p.count + ' item' + (p.count === 1 ? '' : 's') : 'Nothing filed yet') + (p.off ? ' · not on the staff list' : '') + '</div>' : '') + '</div><span>&#8250;</span></div>').join('') : '<div class="msg">Nobody by that name on the staff list or in Personnel Files. For someone who is not an employee, start a Quick note and check Not an NCEMS employee.</div>') + '</div>';
   if (q.length >= 3 && !DEMO) h += '<div class="lbl">Inside documents</div><div id="sdocs"><div class="msg">Searching...</div></div>';
   el.innerHTML = h;
   if (q.length >= 3 && !DEMO) {
