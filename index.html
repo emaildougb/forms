@@ -136,7 +136,7 @@
    file in the agency's format and files it in the Personnel Files
    folder on the CG Staff SharePoint site. Search by employee.
    ===================================================================== */
-const VERSION = '1.2';
+const VERSION = '1.2.1';
 
 const CONFIG = {
   clientId:  '254c214f-bfe2-4ebb-9294-99815e167ab0',   // same Entra app as CG Staff and Facilities and Grounds
@@ -1280,9 +1280,10 @@ function renderSignin(msg) {
 }
 window.addEventListener('beforeunload', e => { if (doc && route === 'form' && !doc._done) { e.preventDefault(); e.returnValue = ''; } });
 (async function start() {
+  /* 1.2.1: let Microsoft sign in read its reply from the address bar BEFORE the back button code tidies the address (1.1 wiped it and looped back to sign in) */
+  if (DEMO) { pushNav(true); $('hdr-sub').textContent = 'DEMO · nothing saves'; render(); return; }
+  try { await initAuth(); } catch (e) { pushNav(true); renderSignin(e.message); return; }
   pushNav(true);
-  if (DEMO) { $('hdr-sub').textContent = 'DEMO · nothing saves'; render(); return; }
-  try { await initAuth(); } catch (e) { renderSignin(e.message); return; }
   if (!account) { renderSignin(); return; }
   if (!isStaff()) {
     $('main').innerHTML = '<div class="center"><div class="center-card"><div class="center-head"><img src="logo.png" alt=""><h2>FORMS</h2></div><div class="center-body"><div class="only-box"><b>CG Staff only</b>You are signed in as ' + esc(meEmail()) + '. This is for the CG Staff. Your crew apps are on the NCEMS Hub.<a href="' + CONFIG.hubUrl + '">Open the NCEMS Hub</a></div><a class="small-link" href="#" onclick="signOut();return false">Sign out</a></div></div></div>';

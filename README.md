@@ -2,7 +2,7 @@
 
 Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search. Makes a Word file in the agency's own format and files it on the CG Staff SharePoint site.
 
-**Version 1.2**
+**Version 1.2.1**
 
 ## Links
 
@@ -63,6 +63,9 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 - **Employee page:** everything filed for that person, newest first, quick notes shown in full, Open goes to the Word file in SharePoint. Upload old file adds past write ups and renames them so they sort by date
 
 ## Changelog
+
+### v1.2.1
+- Fixed sign in looping back to the sign in screen. The back button code from 1.1 cleared the address bar before Microsoft sign in could read its reply
 
 ### v1.2
 - Staff list built in: all 64 members of the allncems group (pulled 10/19/2026). The Employee box suggests names as you type and shows "On the NCEMS staff list" when it matches
