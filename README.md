@@ -2,7 +2,7 @@
 
 Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search. Makes a Word file in the agency's own format and files it on the CG Staff SharePoint site.
 
-**Version 1.2.1**
+**Version 1.3**
 
 ## Links
 
@@ -32,11 +32,7 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 2. Repo Settings > Pages: Deploy from a branch, `main`, `/ (root)`, Save
 3. GoDaddy DNS for northcountryems.org: Type `CNAME`, Name `forms`, Value `emaildougb.github.io`, TTL 1 hour
 4. Back in Settings > Pages, once the DNS check goes green, tick **Enforce HTTPS**
-5. **Sign in setup (Entra).** Forms uses the same Microsoft app registration as CG Staff, so it needs one more redirect address:
-   - Go to entra.microsoft.com > Applications > App registrations > All applications
-   - Open the one with Application (client) ID `254c214f-bfe2-4ebb-9294-99815e167ab0` (the CG Staff / Facilities and Grounds app)
-   - Authentication > under **Single-page application**, Add URI: `https://forms.northcountryems.org/`
-   - Save
+5. **Sign in setup (Entra).** Done 10/21/2026. Since 1.3, Forms signs in through the **NCEMS Command Staff** app (client id `f758d1fe-91b7-4bd5-92a9-1324d8bf0826`), shared with CG Staff. Both Forms addresses (`https://emaildougb.github.io/forms/` and `https://forms.northcountryems.org/`) are on it, and only the 7 CG Staff are assigned (Assignment required = Yes). Setup notes are in the CG Staff README
 6. **Lock the Personnel Files folder (important).** The app hides personnel search from anyone not on its chiefs list, but the real lock is the SharePoint permission. Anyone who is a member of the CG Staff site can open that folder in SharePoint unless you change it:
    - The folder is made automatically the first time something is filed. To set it up ahead of time, go to the CG Staff site > Documents and make a folder named exactly `Personnel Files`
    - Click the folder's ... > Manage access (or Details > Manage access) > Advanced settings > **Stop Inheriting Permissions**
@@ -63,6 +59,9 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 - **Employee page:** everything filed for that person, newest first, quick notes shown in full, Open goes to the Word file in SharePoint. Upload old file adds past write ups and renames them so they sort by date
 
 ## Changelog
+
+### v1.3
+- Signs in with the new **NCEMS Command Staff** Entra app (`f758d1fe-91b7-4bd5-92a9-1324d8bf0826`) instead of NCEMS Grounds Tracker. Only the 7 CG Staff can get past Microsoft's sign in. Sign in once more after this update
 
 ### v1.2.1
 - Fixed sign in looping back to the sign in screen. The back button code from 1.1 cleared the address bar before Microsoft sign in could read its reply
