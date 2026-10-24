@@ -187,7 +187,7 @@
    file in the agency's format and files it in the Personnel Files
    folder on the CG Staff SharePoint site. Search by employee.
    ===================================================================== */
-const VERSION = '1.4';
+const VERSION = '1.5';
 
 const CONFIG = {
   clientId:  'f758d1fe-91b7-4bd5-92a9-1324d8bf0826',   // 1.3: NCEMS Command Staff Entra app (only the 7 CG Staff are assigned)
@@ -1442,6 +1442,42 @@ window.addEventListener('beforeunload', e => { if (doc && route === 'form' && !d
   $('hdr-sub').textContent = signer().name + (signer().title ? ', ' + signer().title : '');
   pushNav(true); render();
   if (canPersonnel()) loadPeople().catch(() => {});
+})();
+</script>
+<script>
+/* NCEMS haptics 1.0 (10/24/2026, same method as EP Checker 2.30): a light tick on every tap.
+   iPhone/iPad: Safari has no vibrate, but toggling a switch style checkbox gives a system haptic
+   (iOS 18 and newer, System Haptics on). We click a hidden one. Android: navigator.vibrate. */
+(function () {
+  var TAP = 'a, button, label, select, summary, input[type=checkbox], input[type=radio], [onclick], [role=button], .card, .tab';
+  var last = 0;
+  function tick() {
+    var now = Date.now();
+    if (now - last < 60) return;   /* a label and its checkbox can fire two clicks for one tap */
+    last = now;
+    try {
+      if (typeof navigator.vibrate === 'function') { navigator.vibrate(10); return; }
+      var label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.display = 'none';
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      input.tabIndex = -1;
+      label.appendChild(input);
+      document.head.appendChild(label);
+      label.click();
+      document.head.removeChild(label);
+    } catch (e) {}
+  }
+  window.ncemsHaptic = tick;
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest || t.closest('head')) return;
+    var el = t.closest(TAP);
+    if (!el || el.disabled) return;
+    tick();
+  }, true);
 })();
 </script>
 </body>

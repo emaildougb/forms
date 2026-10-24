@@ -2,7 +2,7 @@
 
 Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search. Makes a Word file in the agency's own format and files it on the CG Staff SharePoint site.
 
-**Version 1.4**
+**Version 1.5**
 
 ## Links
 
@@ -59,6 +59,9 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 - **Employee page:** everything filed for that person, newest first, quick notes shown in full, Open goes to the Word file in SharePoint. Upload old file adds past write ups and renames them so they sort by date
 
 ## Changelog
+
+### v1.5
+- Haptics: a light tick when you tap a button, link, tab or card, the same way the EP Checker does it. iPhone needs iOS 18 or newer with System Haptics on (Settings, Sounds & Haptics). Android phones vibrate. Nothing else changed
 
 ### v1.4
 - Header matched to Derek's Open Shifts app (standing rule for every NCEMS app): white bar, **NCEMS Forms** with NCEMS in black and Forms in green, a thin line, then North Country EMS
