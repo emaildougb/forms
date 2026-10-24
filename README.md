@@ -2,7 +2,7 @@
 
 Write ups, quick notes and SOG drafts for the CG Staff, plus a personnel search. Makes a Word file in the agency's own format and files it on the CG Staff SharePoint site.
 
-**Version 1.3**
+**Version 1.4**
 
 ## Links
 
@@ -59,6 +59,10 @@ The policy manual and the CBA are NOT in this repo on purpose. GitHub Pages file
 - **Employee page:** everything filed for that person, newest first, quick notes shown in full, Open goes to the Word file in SharePoint. Upload old file adds past write ups and renames them so they sort by date
 
 ## Changelog
+
+### v1.4
+- Header matched to Derek's Open Shifts app (standing rule for every NCEMS app): white bar, **NCEMS Forms** with NCEMS in black and Forms in green, a thin line, then North Country EMS
+- Development record pilot (demo only, `?demo=1`, open Sam Rivera, tab Development (pilot)): idea 1 from "Making Reviews Meaningful at NCEMS". One timeline per person with kudos, coaching, quarterly check ins, self reviews, partner feedback and training, QA and rig check evidence; a Next step card with the career ladder checklist; goals that carry forward; a 5 step quarterly check in; and a yearly review draft built from the timeline with every line linked to where it came from. Sample data, nothing saves. Real users don't see it until `CONFIG.devPilot` is turned on
 
 ### v1.3
 - Signs in with the new **NCEMS Command Staff** Entra app (`f758d1fe-91b7-4bd5-92a9-1324d8bf0826`) instead of NCEMS Grounds Tracker. Only the 7 CG Staff can get past Microsoft's sign in. Sign in once more after this update

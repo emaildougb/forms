@@ -112,13 +112,64 @@
   .sheet h2 { margin:0 0 10px; font-size:16px; }
   .sheet p { line-height:1.5; font-size:13px; }
   @media (max-width:560px) { .row2 { grid-template-columns:1fr; } header p { max-width:52vw; } }
+  /* 1.4 header matched to Derek's Open Shifts app (Doug's rule for every NCEMS app): white bar, system font, NCEMS black + app name green, a thin line, North Country EMS */
+  header { background:#fff; color:#1a1a1a; border-bottom:1px solid #d5e2d5; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header h1 { font-family:inherit; font-size:18px; font-weight:800; letter-spacing:-.3px; text-transform:none; color:#1a1a1a; }
+  header h1 .os-g { color:#2d6a2d; }
+  header .t { display:flex; align-items:center; gap:12px; }
+  header .t .sub { padding-left:12px; border-left:1px solid #d5e2d5; min-width:0; }
+  header .t .sub span { display:block; font-size:12px; color:#5f675f; white-space:nowrap; }
+  header p { font-family:inherit; font-size:12px; color:#4a4a4a; opacity:1; margin:1px 0 0; letter-spacing:normal; }
+  .icon-btn { border-radius:8px; border:1px solid #d5e2d5; background:#fff; color:#2d6a2d; }
+  .icon-btn:hover { background:#e8f4e8; border-color:#a3c9a3; }
+  @media (max-width:640px) { header .t { display:block; } header .t .sub { padding-left:0; border-left:0; } header .t .sub span { display:none; } header h1 { font-size:16px; } }
+  /* 1.4 development record (pilot), Open Shifts look */
+  .ptabs { display:inline-flex; background:#f5f8f5; border:1px solid #d5e2d5; border-radius:8px; padding:2px; margin:6px 0 12px; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .ptabs button { border:0; background:transparent; color:#4a4a4a; border-radius:6px; font:600 13.5px/1 inherit; padding:8px 14px; cursor:pointer; }
+  .ptabs button.on { background:#2d6a2d; color:#fff; }
+  .dev { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color:#1a1a1a; letter-spacing:normal; }
+  .dev * { font-family:inherit; }
+  .dev h2 { font-size:18px; font-weight:800; letter-spacing:-.3px; margin:0 0 4px; }
+  .dev-note { background:#fffbea; border:1px solid #f0c040; border-radius:8px; padding:8px 12px; font-size:13px; margin-bottom:12px; }
+  .dev-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .dev-card { background:#fff; border:1px solid #d5e2d5; border-radius:10px; padding:12px 14px; }
+  .dev-card h3, .dev-h, .dev-q h3 { font-size:15px; font-weight:800; margin:0 0 8px; color:#1a1a1a; text-transform:none; letter-spacing:normal; }
+  .dev-h { margin:18px 0 8px; font-size:16px; }
+  .dev-sub { font-size:13px; color:#5f675f; margin:4px 0; }
+  .dev-bar { height:8px; background:#e6eee6; border-radius:4px; overflow:hidden; } .dev-bar i { display:block; height:100%; background:#2d6a2d; }
+  .dev-ladder, .dev-goals { list-style:none; margin:8px 0 0; padding:0; font-size:14px; line-height:1.5; }
+  .dev-ladder li { color:#4a4a4a; } .dev-ladder li.ok { color:#2d6a2d; }
+  .dev-goals li { margin-bottom:6px; } .dev-goals b { display:block; font-weight:600; } .dev-goals span { font-size:12.5px; color:#5f675f; }
+  .dev-acts { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 4px; }
+  .dv-btn { font:600 14px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; border-radius:8px; padding:10px 14px; background:#fff; color:#2d6a2d; border:1px solid #d5e2d5; cursor:pointer; transition:background .15s; }
+  .dv-btn:hover { background:#e8f4e8; } .dv-btn.main { background:#2d6a2d; color:#fff; border-color:#2d6a2d; } .dv-btn.main:hover { background:#245624; }
+  .dev-filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .dev-filters button { font:600 12.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; border:1px solid #d5e2d5; background:#fff; color:#4a4a4a; border-radius:20px; padding:6px 11px; cursor:pointer; }
+  .dev-filters button.on { background:#2d6a2d; border-color:#2d6a2d; color:#fff; }
+  .dev-tl { list-style:none; margin:0; padding:0; }
+  .dev-tl li { display:flex; gap:12px; padding:10px 12px; background:#fff; border:1px solid #e6eee6; border-left:4px solid var(--kc); border-radius:8px; margin-bottom:6px; }
+  .dev-tl .when { flex:0 0 78px; font-size:13px; color:#5f675f; font-variant-numeric:tabular-nums; padding-top:2px; }
+  .dev-tl .what { flex:1; min-width:0; } .dev-tl .what b { font-size:14.5px; font-weight:600; }
+  .dev-tl .kind { display:inline-block; font-size:11.5px; font-weight:600; color:var(--kc); background:var(--kl); border-radius:6px; padding:1px 7px; margin-right:8px; vertical-align:1px; }
+  .dev-tl .by { display:block; font-size:12.5px; color:#5f675f; margin-top:2px; }
+  .dev-tl p { margin:6px 0 0; font-size:14px; line-height:1.5; color:#1a1a1a; }
+  .dev-tl li.empty { color:#5f675f; border-left-color:#d5e2d5; }
+  .dv-f { display:block; margin:10px 0; } .dv-f span { display:block; font-size:14px; font-weight:600; } .dv-f em { display:block; font-style:normal; font-size:12.5px; color:#5f675f; margin:2px 0 4px; }
+  .dv-f textarea { width:100%; font:14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; border:1px solid #d5e2d5; border-radius:8px; padding:8px 10px; }
+  .dv-f textarea:focus { outline:2px solid #2d6a2d; border-color:#2d6a2d; }
+  .dev-prev { background:#e6f0f8; border-radius:8px; padding:8px 10px; font-size:13px; margin:8px 0; }
+  .dev-qs { font-size:14px; line-height:1.6; padding-left:20px; }
+  .sheet:has(.dev.wide) { max-width:680px; }
+  .dev-q { border-top:1px solid #e6eee6; padding-top:10px; margin-top:10px; } .dev-q p, .dev-q ul { font-size:14px; line-height:1.5; margin:4px 0; }
+  .dev-q .from { font-size:12.5px; color:#5f675f; } .dev-q .cite { color:#1a5a8a; text-decoration:underline; text-decoration-style:dotted; cursor:help; }
+  @media (max-width:640px) { .dev-grid { grid-template-columns:1fr; } .dev-tl li { flex-direction:column; gap:2px; } .dev-tl .when { flex:none; } }
 </style>
 </head>
 <body>
 
 <header>
   <img src="logo.png" alt="" onclick="go('home')" style="cursor:pointer">
-  <div class="t" onclick="go('home')" style="cursor:pointer"><h1>NCEMS Forms</h1><p id="hdr-sub">CG Staff only</p></div>
+  <div class="t" onclick="go('home')" style="cursor:pointer"><h1>NCEMS <span class="os-g">Forms</span></h1><div class="sub"><span>North Country EMS</span><p id="hdr-sub">CG Staff only</p></div></div>
   <button class="icon-btn" onclick="go('home')" title="Forms home" aria-label="Forms home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>
   <button class="icon-btn" onclick="go('search')" title="Search" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg></button>
   <button class="icon-btn" onclick="openInfo()" title="Info" aria-label="Info" style="font-weight:800;font-style:italic;font-family:Georgia,serif">i</button>
@@ -136,11 +187,12 @@
    file in the agency's format and files it in the Personnel Files
    folder on the CG Staff SharePoint site. Search by employee.
    ===================================================================== */
-const VERSION = '1.3';
+const VERSION = '1.4';
 
 const CONFIG = {
   clientId:  'f758d1fe-91b7-4bd5-92a9-1324d8bf0826',   // 1.3: NCEMS Command Staff Entra app (only the 7 CG Staff are assigned)
   tenantId:  '153dc089-095e-4a20-8d10-39321a0aca09',
+  devPilot: false,   // 1.4: the development record shows in demo mode only until the Chief OKs a pilot
   siteHost:  'northcountryemsorg.sharepoint.com',
   sitePath:  '/sites/BattalionChiefLocal',             // CG Staff site
   refFolder: 'Forms Reference',                        // policy-manual.md and cba.md live here
@@ -1222,7 +1274,9 @@ function docRow(f, who) {
 async function renderPerson(m, folder) {
   m.innerHTML = backBtn() + '<div class="person-hd"><div class="avatar">' + esc(initialsOf(folder)) + '</div><div style="flex:1"><h2 style="margin:0;font-size:18px">' + esc(displayName(folder)) + '</h2><span style="font-size:11px;color:var(--muted)">' + esc(CONFIG.personnelFolder + '/' + folder) + '</span></div></div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0"><button class="btn small" onclick="newFor(\'quick\',' + esc(JSON.stringify(displayName(folder))).replace(/"/g, '&quot;') + ')">+ Quick note</button><button class="btn small ghost" onclick="pickWriteup(' + esc(JSON.stringify(displayName(folder))).replace(/"/g, '&quot;') + ')">+ Write up</button><button class="btn small ghost" onclick="uploadOld(' + esc(JSON.stringify(folder)).replace(/"/g, '&quot;') + ')">Upload old file</button></div>' +
+    (DEMO || CONFIG.devPilot ? '<div class="ptabs"><button class="' + (personTab === 'files' ? 'on' : '') + '" onclick="personTab=\'files\';renderPerson($(\'main\'),' + devQ(folder) + ')">Files</button><button class="' + (personTab === 'dev' ? 'on' : '') + '" onclick="personTab=\'dev\';renderPerson($(\'main\'),' + devQ(folder) + ')">Development (pilot)</button></div>' : '') +
     '<div id="plist"><div class="msg">Loading...</div></div>';
+  if ((DEMO || CONFIG.devPilot) && personTab === 'dev') { renderDev(folder); return; }
   let files;
   try {
     files = DEMO ? DEMO_FILES.filter(f => f.person === folder).map(f => ({ name: f.name, _text: f.text, file: {} })) : (await listFolder(CONFIG.personnelFolder + '/' + folder)).filter(f => f.file);
@@ -1233,6 +1287,102 @@ async function renderPerson(m, folder) {
   $('plist').innerHTML = (files.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + Object.keys(counts).map(t => '<span class="tchip" style="background:' + TYPES[t].color + '">' + esc(TYPES[t].name) + ': ' + counts[t] + '</span>').join('') + '</div>' : '') +
     (files.length ? files.map(f => docRow(f, '')).join('') : '<div class="msg">Nothing filed yet.</div>');
 }
+let personTab = 'files';
+/* ---------------- 1.4 Development record (pilot) ----------------
+   Idea 1 from "Making Reviews Meaningful at NCEMS": one running record per person. Notes, coaching, check ins,
+   self reviews, partner feedback and evidence from other systems land on one timeline, and the yearly review is
+   drafted from it. Shown in demo mode only until the Chief OKs a pilot (CONFIG.devPilot). Sample data, nothing saves. */
+const DEV_KINDS = {
+  kudos:    { name: 'Kudos', c: '#2d6a2d', l: '#e8f4e8' },
+  coach:    { name: 'Coaching', c: '#9a5f06', l: '#fff3d6' },
+  checkin:  { name: 'Check in', c: '#1a5a8a', l: '#e6f0f8' },
+  self:     { name: 'Self review', c: '#3b4eab', l: '#eef3ff' },
+  partner:  { name: 'Partner feedback', c: '#5b3f8c', l: '#f1ecf8' },
+  evidence: { name: 'Training, QA, checks', c: '#4a4a4a', l: '#eef1ee' }
+};
+const DEV_DEMO = {
+  'Rivera, Sam': {
+    role: 'Crew 2 EMT, part time', hired: '2023-04-10', next: 'Lead Crew 1 Paramedic',
+    ladder: [ { t: 'Paramedic cert current', done: true }, { t: 'FTO sign off on 10 ALS calls as lead', done: true }, { t: 'Protocol review scores 90% or better, 3 months running', done: true },
+              { t: 'Run a shift brief with a BC watching', done: false }, { t: 'Precept one new EMT', done: false } ],
+    goals: [ { t: 'Lead the shift brief twice by December', set: '2026-07-14', status: 'On track' }, { t: 'Finish PALS renewal before it lapses', set: '2026-07-14', status: 'Done 9/18' } ],
+    entries: [
+      { d: '2026-10-14', k: 'checkin', by: 'Doug Boyce', title: 'Q4 check in',
+        body: 'Look back: ran point on two cardiac arrests this quarter, both clean. Gap: charts finished late twice after long calls. Build: lead the shift brief once before Thanksgiving. Firm expectation: charts done before end of shift, every time.' },
+      { d: '2026-10-11', k: 'partner', by: 'Partner (confidential)', title: 'Partner feedback, Q4',
+        body: 'Calm on scene, talks families through it. Could hand off more tasks instead of doing everything.' },
+      { d: '2026-10-09', k: 'self', by: 'Sam Rivera', title: 'Self review before Q4 check in',
+        body: 'Proud of: the school arrest in September. In my way: long transports wreck my charting time. Next: I want to start precepting.' },
+      { d: '2026-09-30', k: 'evidence', by: 'Protocol review', title: 'Monday Protocol Review: 3 of 3 completed, 94% average', body: '' },
+      { d: '2026-09-02', k: 'kudos', by: 'Doug Boyce', title: 'Great cardiac arrest call',
+        body: 'Ran a clean code at the school, ROSC on scene, chart done before end of shift.' },
+      { d: '2026-08-12', k: 'coach', by: 'Derek Langdon', title: 'Late charts after long transports',
+        body: 'Two charts finished the next day. Agreed plan: start the narrative on the return trip.' },
+      { d: '2026-07-14', k: 'checkin', by: 'Doug Boyce', title: 'Q3 check in',
+        body: 'Look back: strong airway skills, good with new partners. Gap: hesitant to take the lead on scene. Build: lead the shift brief twice by December. Firm expectation: PALS renewed before it lapses.' },
+      { d: '2026-06-20', k: 'evidence', by: 'Apparatus Checker', title: '22 rig checks this quarter, 0 left for the next crew', body: '' },
+      { d: '2026-03-21', k: 'coach', by: 'Doug Boyce', title: 'Radio traffic on scene', body: 'Keep updates short and use plain language with dispatch.' }
+    ]
+  }
+};
+let devFilter = 'all';
+function devRec(folder) {
+  if (!DEV_DEMO[folder]) DEV_DEMO[folder] = { role: 'Crew member', hired: '', next: 'Next step not set yet', ladder: [], goals: [], entries: [] };
+  return DEV_DEMO[folder];
+}
+function devQ(folder) { return esc(JSON.stringify(folder)).replace(/"/g, '&quot;'); }
+function renderDev(folder) {
+  const R = devRec(folder), done = R.ladder.filter(x => x.done).length, total = R.ladder.length || 1, q = devQ(folder);
+  const list = R.entries.slice().sort((a, b) => b.d.localeCompare(a.d)).filter(e => devFilter === 'all' || e.k === devFilter);
+  const counts = {}; R.entries.forEach(e => counts[e.k] = (counts[e.k] || 0) + 1);
+  $('plist').innerHTML = '<div class="dev">' +
+    '<div class="dev-note">Pilot preview with sample data. Nothing here saves. From the review plan for Chief Shirley, idea 1: one record per person.</div>' +
+    '<div class="dev-grid">' +
+      '<section class="dev-card"><h3>Next step: ' + esc(R.next) + '</h3><div class="dev-bar"><i style="width:' + Math.round(done / total * 100) + '%"></i></div><p class="dev-sub">' + done + ' of ' + R.ladder.length + ' done</p>' +
+        '<ul class="dev-ladder">' + R.ladder.map(x => '<li class="' + (x.done ? 'ok' : '') + '">' + (x.done ? '&#10003; ' : '&#9675; ') + esc(x.t) + '</li>').join('') + '</ul></section>' +
+      '<section class="dev-card"><h3>Goals this year</h3>' + (R.goals.length ? '<ul class="dev-goals">' + R.goals.map(g => '<li><b>' + esc(g.t) + '</b><span>' + esc(g.status) + ' · set ' + esc(isoToUS(g.set)) + '</span></li>').join('') + '</ul>' : '<p class="dev-sub">No goals yet. They come from the first check in.</p>') + '</section>' +
+    '</div>' +
+    '<div class="dev-acts"><button class="dv-btn main" onclick="devCheckin(' + q + ')">Quarterly check in</button><button class="dv-btn" onclick="devSelf(' + q + ')">Send self review</button><button class="dv-btn" onclick="devPartner(' + q + ')">Ask a partner</button><button class="dv-btn" onclick="devReview(' + q + ')">Draft yearly review</button></div>' +
+    '<h3 class="dev-h">Their year, newest first</h3>' +
+    '<div class="dev-filters"><button class="' + (devFilter === 'all' ? 'on' : '') + '" onclick="devFilter=\'all\';renderDev(' + q + ')">All ' + R.entries.length + '</button>' +
+      Object.keys(DEV_KINDS).filter(k => counts[k]).map(k => '<button class="' + (devFilter === k ? 'on' : '') + '" onclick="devFilter=\'' + k + '\';renderDev(' + q + ')">' + DEV_KINDS[k].name + ' ' + counts[k] + '</button>').join('') + '</div>' +
+    '<ol class="dev-tl">' + (list.length ? list.map(e => { const K = DEV_KINDS[e.k]; return '<li style="--kc:' + K.c + ';--kl:' + K.l + '"><div class="when">' + esc(isoToUS(e.d)) + '</div><div class="what"><span class="kind">' + K.name + '</span><b>' + esc(e.title) + '</b><span class="by">' + esc(e.by) + '</span>' + (e.body ? '<p>' + esc(e.body) + '</p>' : '') + '</div></li>'; }).join('') : '<li class="empty">Nothing here yet.</li>') + '</ol></div>';
+}
+function devAdd(folder, e) { devRec(folder).entries.push(e); closeOv(); devFilter = 'all'; renderDev(folder); toast('Added to the timeline (demo, not saved)'); }
+function devCheckin(folder) {
+  const R = devRec(folder), last = R.entries.filter(e => e.k === 'checkin').sort((a, b) => b.d.localeCompare(a.d))[0];
+  openOv('<div class="dev"><h2>Quarterly check in, ' + esc(displayName(folder)) + '</h2><p class="dev-sub">About 10 minutes on shift. Short answers.</p>' +
+    (last ? '<div class="dev-prev"><b>Last time (' + esc(isoToUS(last.d)) + '):</b> ' + esc(last.body) + '</div>' : '') +
+    [['ci1', 'Look back', 'What did they deliver this quarter? Facts and calls, not adjectives.'], ['ci2', 'Name the gap', 'What exactly needs to change, and why it matters to the crew.'], ['ci3', 'One thing to build', 'One skill or habit for next quarter, and how you will both know it happened.'], ['ci4', 'One firm expectation', 'The one thing that must keep happening or must change.'], ['ci5', 'What they said', 'Their side, in their words.']]
+      .map(([id, l, h]) => '<label class="dv-f"><span>' + l + '</span><em>' + h + '</em><textarea id="' + id + '" rows="2"></textarea></label>').join('') +
+    '<div class="dev-acts"><button class="dv-btn" onclick="closeOv()">Cancel</button><button class="dv-btn main" onclick="devSaveCheckin(' + devQ(folder) + ')">Save to timeline</button></div></div>');
+}
+function devSaveCheckin(folder) {
+  const v = id => ($(id).value || '').trim(), parts = [['Look back', v('ci1')], ['Gap', v('ci2')], ['Build', v('ci3')], ['Firm expectation', v('ci4')], ['They said', v('ci5')]].filter(p => p[1]);
+  if (!parts.length) { toast('Write at least one answer.', true); return; }
+  if (v('ci3')) devRec(folder).goals.unshift({ t: v('ci3'), set: todayISO(), status: 'New' });
+  devAdd(folder, { d: todayISO(), k: 'checkin', by: signer().name, title: 'Check in', body: parts.map(p => p[0] + ': ' + p[1]).join('. ') + '.' });
+}
+function devSelf(folder) {
+  openOv('<div class="dev"><h2>Self review for ' + esc(displayName(folder)) + '</h2><p class="dev-sub">They get three questions a week before the check in. Their answers land on this timeline.</p><ol class="dev-qs"><li>A call or moment you are proud of this quarter</li><li>What got in your way</li><li>What you want to work on next</li></ol><p class="dev-sub">In the real version this goes to their NCEMS email with a link. In the demo it adds a sample answer.</p><div class="dev-acts"><button class="dv-btn" onclick="closeOv()">Cancel</button><button class="dv-btn main" onclick="devAdd(' + devQ(folder) + ',{d:todayISO(),k:\'self\',by:displayName(' + devQ(folder) + '),title:\'Self review\',body:\'Proud of: (their answer). In my way: (their answer). Next: (their answer).\'})">Send (demo)</button></div></div>');
+}
+function devPartner(folder) {
+  openOv('<div class="dev"><h2>Ask a partner about ' + esc(displayName(folder)) + '</h2><p class="dev-sub">Two minutes, confidential. Only CG Staff see the answers, never who wrote them.</p><ol class="dev-qs"><li>What do they do that makes the crew better?</li><li>One thing that would make them even better to work with?</li></ol><p class="dev-sub">The real version picks the partners they ran with this quarter from the schedule.</p><div class="dev-acts"><button class="dv-btn" onclick="closeOv()">Cancel</button><button class="dv-btn main" onclick="devAdd(' + devQ(folder) + ',{d:todayISO(),k:\'partner\',by:\'Partner (confidential)\',title:\'Partner feedback\',body:\'(Sample answer from a partner.)\'})">Send (demo)</button></div></div>');
+}
+function devReview(folder) {
+  const R = devRec(folder), E = R.entries.slice().sort((a, b) => a.d.localeCompare(b.d)), name = displayName(folder);
+  const pick = k => E.filter(e => e.k === k), cite = e => '<a class="cite" title="' + esc(e.body || e.title) + '">' + esc(DEV_KINDS[e.k].name + ' ' + isoToUS(e.d).replace(/\/\d{4}$/, '')) + '</a>';
+  const kud = pick('kudos'), coach = pick('coach'), ci = pick('checkin'), self = pick('self'), partner = pick('partner'), ev = pick('evidence');
+  const line = (txt, src) => '<p>' + txt + (src.length ? ' <span class="from">From: ' + src.map(cite).join(', ') + '</span>' : '') + '</p>';
+  openOv('<div class="dev wide"><h2>Yearly review draft, ' + esc(name) + '</h2><p class="dev-sub">Drafted from ' + E.length + ' entries on the timeline. Every line shows where it came from. The BC edits it, adds the conversation, and it prints on the agency evaluation form so Policy 1001 is still met.</p>' +
+    '<div class="dev-q"><h3>Would I want this person on my crew for a bad call?</h3>' + line('Yes. ' + (kud.length ? esc(kud.at(-1).title) + ' shows how they run a hard call.' : '') + (partner.length ? ' Partners describe them as calm on scene and good with families.' : ''), kud.concat(partner)) + '</div>' +
+    '<div class="dev-q"><h3>What is their real strength?</h3>' + line('Steady clinical work under pressure, and the crew trusts them.' + (ev.length ? ' Protocol review and rig check records back that up.' : ''), kud.concat(ev)) + '</div>' +
+    '<div class="dev-q"><h3>What one thing would make them better?</h3>' + line(coach.length ? 'Charting on long transports. It came up in coaching and again at the Q4 check in; the plan is to start the narrative on the return trip.' : 'Not set yet.', coach.concat(ci.slice(-1))) + '</div>' +
+    '<div class="dev-q"><h3>Ready for the next step?</h3>' + line(R.ladder.length ? esc(R.next) + ': ' + R.ladder.filter(x => x.done).length + ' of ' + R.ladder.length + ' done. Still to do: ' + R.ladder.filter(x => !x.done).map(x => esc(x.t)).join('; ') + '.' : 'Next step not set yet.', self) + '</div>' +
+    '<div class="dev-q"><h3>Goals for next year</h3><ul>' + (R.goals.length ? R.goals.map(g => '<li>' + esc(g.t) + ' <span class="from">(' + esc(g.status) + ')</span></li>').join('') : '<li>Set at the first check in</li>') + '</ul></div>' +
+    '<div class="dev-acts"><button class="dv-btn" onclick="closeOv()">Close</button><button class="dv-btn main" onclick="toast(\'In the real version this fills the evaluation form and files it in their folder.\')">Fill the evaluation form</button></div></div>');
+}
+
 function newFor(type, name) { doc = freshDoc(type); doc.employee = name; step = 0; route = 'form'; pushNav(); window.scrollTo(0, 0); render(); }
 function pickWriteup(name) { openOv('<h2>Write up for ' + esc(name) + '</h2><div class="tiles">' + ['coach', 'verbal', 'written', 'cap'].map(t => tile(t, "closeOv();newFor('" + t + "'," + esc(JSON.stringify(name)).replace(/"/g, '&quot;') + ")")).join('') + '</div><br><button class="btn ghost" onclick="closeOv()">Cancel</button>'); }
 function uploadOld(folder) {
